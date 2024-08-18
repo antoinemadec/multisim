@@ -1,0 +1,19 @@
+#!/bin/bash
+
+cpu_nb="$1"
+[ "$cpu_nb" = "" ] && cpu_nb=4
+
+(
+# compilation
+sleep 4
+./run_cpu compilation 0  > /dev/null
+for ((i=1;i<cpu_nb;i++)); do
+  cp -rf output_cpu_0 output_cpu_$i
+done
+# run
+for ((i=0;i<cpu_nb;i++)); do
+  ./run_cpu run $i &
+done
+)&
+
+./run_top $cpu_nb

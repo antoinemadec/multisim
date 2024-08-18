@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+
+cpu_nb="$1"
+[ "$cpu_nb" = "" ] && cpu_nb=4
+
+mkdir -p output
+cp -rfL src/* output
+cd output
+
+verilator --binary -j 0 \
+  top.sv noc.sv cpu.sv  \
+  -GCPU_NB=$cpu_nb
+cat << EOF
+
+----------------------------------------
+-- simulation start
+----------------------------------------
+EOF
+time ./obj_dir/Vtop

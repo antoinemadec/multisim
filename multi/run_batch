@@ -1,0 +1,15 @@
+#!/bin/bash
+
+cpu_nb_list=(1 4 16)
+
+for cpu_nb in "${cpu_nb_list[@]}" ; do
+  echo "-- cpu_nb=$cpu_nb"
+  rm -rf output*
+  ./run $cpu_nb &> sim.log
+
+  echo "-- saving data"
+  directory=batch_cpu_nb_$cpu_nb
+  mkdir -p $directory
+  mv sim.log output* $directory
+done
+
