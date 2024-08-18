@@ -6,7 +6,7 @@ import "DPI-C" function int dpi_cpu_client_start(
 import "DPI-C" function int dpi_cpu_client_send_data(input bit [63:0] data);
 
 
-module top_cpu;
+module cpu_dpi_client;
 
   bit clk = 0;
   always #1ns clk <= ~clk;
