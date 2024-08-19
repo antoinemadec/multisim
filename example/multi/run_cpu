@@ -15,9 +15,9 @@ if ((compilation)); then
   cp -rfL src/* $output_dir
   cd $output_dir
 
-  verilator --binary -j 0    \
+  verilator --binary -j 0         \
     cpu_multisim_client.sv cpu.sv \
-    cpu_multisim_client.cpp client/client.cpp
+    $MULTISIM_SRC/multisim_client.cpp $MULTISIM_SRC/socket_server/client.cpp
 else
   port_number="$(grep "port" ./output_top/server_cpu_$cpu_index.txt | awk '{print $2}')"
 

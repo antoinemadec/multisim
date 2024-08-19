@@ -9,9 +9,9 @@ mkdir -p output_top
 cp -rfL src/* output_top
 cd output_top
 
-verilator --binary -j 0                  \
-  top.sv noc.sv cpu_multisim_server.sv        \
-  cpu_multisim_server.cpp server/server.cpp   \
+verilator --binary -j 0                                                    \
+  top.sv noc.sv cpu_multisim_server.sv                                     \
+  $MULTISIM_SRC/multisim_server.cpp $MULTISIM_SRC/socket_server/server.cpp \
   -GCPU_NB=$cpu_nb
 cat << EOF
 
