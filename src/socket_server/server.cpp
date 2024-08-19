@@ -46,6 +46,7 @@ void Server::start() {
   fp = fopen(serverInfoFile, "w+");
   fprintf(fp, "ip: %s\n", serverIp);
   fprintf(fp, "port: %0d\n", serverPort);
+  fflush(fp);
   fclose(fp);
   printf("Server: [%s] has started, info in %s\n", serverName, serverInfoFile);
 }

@@ -20,8 +20,6 @@ if ((compilation)); then
     $MULTISIM_SRC/multisim_client.sv \
     $MULTISIM_SRC/multisim_client.cpp $MULTISIM_SRC/socket_server/client.cpp
 else
-  port_number="$(grep "port" ./output_top/server_cpu_$cpu_index.txt | awk '{print $2}')"
-
   cd $output_dir
 
   cat << EOF
@@ -30,5 +28,5 @@ else
   -- simulation start
   ----------------------------------------
 EOF
-  (time ./obj_dir/Vcpu_multisim_client +CPU_INDEX=$cpu_index +SERVER_PORT=$port_number) &> sim.log
+  (time ./obj_dir/Vcpu_multisim_client +CPU_INDEX=$cpu_index) &> sim.log
 fi

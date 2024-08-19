@@ -1,15 +1,16 @@
 import "DPI-C" function int multisim_client_start(
   string server_name,
-  string server_address, // FIXME: get this from server_name's file
-  int server_port // FIXME: get this from server_name's file
+  string server_address,
+  int server_port
 );
 import "DPI-C" function int multisim_client_send_data(input bit [63:0] data);
 
 
-module multisim_client (
+module multisim_client #(
+    parameter string SERVER_RUNTIME_DIRECTORY = "../output_top"
+) (
     input bit clk,
     input string server_name,
-    input [31:0] server_port, // FIXME: get this from server_name's file
     output bit data_rdy,
     input bit data_vld,
     input bit [63:0] data
@@ -17,15 +18,39 @@ module multisim_client (
 
   bit [63:0] data_q;
 
+  function automatic int get_server_address_and_port(
+      input string server_name, output string server_address, output int server_port);
+    int fp;
+    string garbage;
+    string server_file = {SERVER_RUNTIME_DIRECTORY, "/server_", server_name, ".txt"};
+    $display("multisim_client: server_file=%s", server_file);
+    fp = $fopen(server_file, "r");
+    if (fp == 0) begin
+      return 0;
+    end
+    $fscanf(fp, "%s %s", garbage, server_address);
+    $fscanf(fp, "%s %d", garbage, server_port);
+    $fclose(fp);
+    return 1;
+  endfunction
+
   initial begin
-    data_rdy = 1;
+    string server_address;
+    int server_port;
     wait (server_name != "");
-    wait (server_port != 0);
-    while (multisim_client_start(
-        server_name, "127.0.0.1", server_port
+    while (get_server_address_and_port(
+        server_name, server_address, server_port
     ) != 1) begin
       ;
     end
+    $display("multisim_client: server_name=%s server_address=%s server_port=%d", server_name,
+             server_address, server_port);
+    while (multisim_client_start(
+        server_name, server_address, server_port
+    ) != 1) begin
+      ;
+    end
+    data_rdy = 1;
   end
 
   always @(posedge clk) begin
