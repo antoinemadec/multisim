@@ -4,12 +4,12 @@
 #include "svdpi.h"
 #include "client/client.h"
 
-extern "C" int dpi_cpu_client_start(int idx, char const *server_address, int server_port);
-extern "C" int dpi_cpu_client_send_data(const svBitVecVal *data);
+extern "C" int multisim_client_start(int idx, char const *server_address, int server_port);
+extern "C" int multisim_client_send_data(const svBitVecVal *data);
 
 int new_socket = 0;
 
-int dpi_cpu_client_start(int idx, char const *server_address, int server_port) {
+int multisim_client_start(int idx, char const *server_address, int server_port) {
   char *str = new char[80];
   sprintf(str, "cpu_%0d", idx);
   Client *client = new Client(str);
@@ -21,7 +21,7 @@ int dpi_cpu_client_start(int idx, char const *server_address, int server_port) {
   return 1;
 }
 
-int dpi_cpu_client_send_data(const svBitVecVal *data) {
+int multisim_client_send_data(const svBitVecVal *data) {
   int r;
   uint32_t send_buf[2];
   send_buf[0] = data[0];

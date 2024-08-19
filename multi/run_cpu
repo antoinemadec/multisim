@@ -16,8 +16,8 @@ if ((compilation)); then
   cd $output_dir
 
   verilator --binary -j 0    \
-    cpu_dpi_client.sv cpu.sv \
-    cpu_dpi_client.cpp client/client.cpp
+    cpu_multisim_client.sv cpu.sv \
+    cpu_multisim_client.cpp client/client.cpp
 else
   port_number="$(grep "port" ./output_top/server_cpu_$cpu_index.txt | awk '{print $2}')"
 
@@ -29,5 +29,5 @@ else
   -- simulation start
   ----------------------------------------
 EOF
-  (time ./obj_dir/Vcpu_dpi_client +CPU_INDEX=$cpu_index +SERVER_PORT=$port_number) &> sim.log
+  (time ./obj_dir/Vcpu_multisim_client +CPU_INDEX=$cpu_index +SERVER_PORT=$port_number) &> sim.log
 fi

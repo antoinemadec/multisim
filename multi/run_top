@@ -10,8 +10,8 @@ cp -rfL src/* output_top
 cd output_top
 
 verilator --binary -j 0                  \
-  top.sv noc.sv cpu_dpi_server.sv        \
-  cpu_dpi_server.cpp server/server.cpp   \
+  top.sv noc.sv cpu_multisim_server.sv        \
+  cpu_multisim_server.cpp server/server.cpp   \
   -GCPU_NB=$cpu_nb
 cat << EOF
 

@@ -27,7 +27,7 @@ module top #(
     assign data_vld[cpu_idx] = cpu_data_vld;
     assign data[cpu_idx] = cpu_data;
 
-    cpu_dpi_server i_cpu (
+    cpu_multisim_server i_cpu (
         .clk      (clk),
         .cpu_index(cpu_idx),
         .data_rdy (cpu_data_rdy),

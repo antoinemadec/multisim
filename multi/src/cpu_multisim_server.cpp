@@ -5,16 +5,16 @@
 #include "server/server.h"
 
 
-extern "C" int dpi_cpu_server_start(int idx);
-extern "C" int dpi_cpu_server_get_data(int idx, svBitVecVal data[2]);
+extern "C" int multisim_server_start(int idx);
+extern "C" int multisim_server_get_data(int idx, svBitVecVal data[2]);
 
-#define CPU_NUMBER 16
+#define SERVER_NUMBER 16
 
-Server *server[CPU_NUMBER];
-int new_socket[CPU_NUMBER];
+Server *server[SERVER_NUMBER];
+int new_socket[SERVER_NUMBER];
 
 
-int dpi_cpu_server_start(int idx)
+int multisim_server_start(int idx)
 {
   char *str = new char[80];
   sprintf(str, "cpu_%0d", idx);
@@ -25,7 +25,7 @@ int dpi_cpu_server_start(int idx)
 }
 
 
-int dpi_cpu_server_get_data(int idx, svBitVecVal* data) {
+int multisim_server_get_data(int idx, svBitVecVal* data) {
   uint32_t read_buf[2];
   int r;
 

@@ -1,12 +1,12 @@
-import "DPI-C" function int dpi_cpu_client_start(
+import "DPI-C" function int multisim_client_start(
   int idx,
   string server_address,
   int server_port
 );
-import "DPI-C" function int dpi_cpu_client_send_data(input bit [63:0] data);
+import "DPI-C" function int multisim_client_send_data(input bit [63:0] data);
 
 
-module cpu_dpi_client;
+module cpu_multisim_client;
 
   bit clk = 0;
   always #1ns clk <= ~clk;
@@ -28,7 +28,7 @@ module cpu_dpi_client;
       $fatal("+SERVER_PORT not set");
     end
     $display("CPU_INDEX=%0d", cpu_index);
-    while (dpi_cpu_client_start(
+    while (multisim_client_start(
         cpu_index, "127.0.0.1", server_port
     ) != 1) begin
       ;
@@ -53,15 +53,15 @@ module cpu_dpi_client;
 
   always @(posedge clk) begin
     if (data_vld && data_rdy) begin
-      int data_rdy_dpi;
-      data_rdy_dpi = dpi_cpu_client_send_data(data);
-      data_rdy <= data_rdy_dpi[0];
+      int data_rdy_multisim;
+      data_rdy_multisim = multisim_client_send_data(data);
+      data_rdy <= data_rdy_multisim[0];
       data_q <= data;
     end
     if (!data_rdy) begin
-      int data_rdy_dpi;
-      data_rdy_dpi = dpi_cpu_client_send_data(data_q);
-      data_rdy <= data_rdy_dpi[0];
+      int data_rdy_multisim;
+      data_rdy_multisim = multisim_client_send_data(data_q);
+      data_rdy <= data_rdy_multisim[0];
     end
   end
 
