@@ -1,5 +1,5 @@
 import "DPI-C" function int multisim_client_start(
-  int idx,
+  string server_name,
   string server_address,
   int server_port
 );
@@ -19,8 +19,10 @@ module cpu_multisim_client;
 
   bit [31:0] cpu_index;
   bit [31:0] server_port;
+  string server_name;
 
   initial begin
+    $sformat(server_name, "cpu_%0d", cpu_index);
     if (!$value$plusargs("CPU_INDEX=%d", cpu_index)) begin
       $fatal("+CPU_INDEX not set");
     end
@@ -29,7 +31,7 @@ module cpu_multisim_client;
     end
     $display("CPU_INDEX=%0d", cpu_index);
     while (multisim_client_start(
-        cpu_index, "127.0.0.1", server_port
+        server_name, "127.0.0.1", server_port
     ) != 1) begin
       ;
     end
@@ -56,7 +58,7 @@ module cpu_multisim_client;
       int data_rdy_multisim;
       data_rdy_multisim = multisim_client_send_data(data);
       data_rdy <= data_rdy_multisim[0];
-      data_q <= data;
+      data_q   <= data;
     end
     if (!data_rdy) begin
       int data_rdy_multisim;

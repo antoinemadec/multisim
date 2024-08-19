@@ -1,23 +1,25 @@
-#include <stdio.h>
-#include <unistd.h>
+#include "client/client.h"
 #include "stdlib.h"
 #include "svdpi.h"
-#include "client/client.h"
+#include <stdio.h>
+#include <unistd.h>
 
-extern "C" int multisim_client_start(int idx, char const *server_address, int server_port);
+extern "C" int multisim_client_start(char const *server_name,
+                                     char const *server_address,
+                                     int server_port);
 extern "C" int multisim_client_send_data(const svBitVecVal *data);
 
 int new_socket = 0;
 
-int multisim_client_start(int idx, char const *server_address, int server_port) {
-  char *str = new char[80];
-  sprintf(str, "cpu_%0d", idx);
-  Client *client = new Client(str);
+int multisim_client_start(char const *server_name, char const *server_address,
+                          int server_port) {
+  Client *client = new Client(server_name);
   if (!client->start(server_address, server_port)) {
     return 0;
   }
   new_socket = client->getSocket();
-  printf("Client: [client_cpu_%0d] has started at %s:%0d\n", idx, server_address, server_port);
+  printf("Client: [%s] has started at %s:%0d\n", server_name, server_address,
+         server_port);
   return 1;
 }
 

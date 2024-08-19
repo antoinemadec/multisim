@@ -1,20 +1,18 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <unistd.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <ifaddrs.h>
+#include <set>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <set>
 #include <sys/socket.h>
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <fcntl.h>
-
+#include <unistd.h>
 
 #define BASE_PORT 8100
 #define FILENAME_MAX_SIZE 256
-
 
 /**
  * Implementation of a non-blocking socket server
@@ -25,21 +23,21 @@
  *  - forbids servers with the same name
  */
 class Server {
-  public:
-    Server(char const *name);
-    void start();
-    int acceptNewSocket();
-    char const *serverName;
-    char const *serverIp;
-    int serverPort;
-    char serverInfoFile[FILENAME_MAX_SIZE + 1];
+public:
+  Server(char const *name);
+  void start();
+  int acceptNewSocket();
+  char const *serverName;
+  char const *serverIp;
+  int serverPort;
+  char serverInfoFile[FILENAME_MAX_SIZE + 1];
 
-  private:
-    int server_fd;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
-    bool serverIsRunning = false;
-    char const *getIp();
-    static std::set<char const *> serverNameSet;
+private:
+  int server_fd;
+  struct sockaddr_in address;
+  int addrlen = sizeof(address);
+  bool serverIsRunning = false;
+  char const *getIp();
+  static std::set<char const *> serverNameSet;
 };
 #endif
