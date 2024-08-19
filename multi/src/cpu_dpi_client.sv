@@ -51,13 +51,17 @@ module cpu_dpi_client;
     data_rdy = 1;
   end
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     if (data_vld && data_rdy) begin
-      data_rdy <= dpi_cpu_client_send_data(data)[0];
+      int data_rdy_dpi;
+      data_rdy_dpi = dpi_cpu_client_send_data(data);
+      data_rdy <= data_rdy_dpi[0];
       data_q <= data;
     end
     if (!data_rdy) begin
-      data_rdy <= dpi_cpu_client_send_data(data_q)[0];
+      int data_rdy_dpi;
+      data_rdy_dpi = dpi_cpu_client_send_data(data_q);
+      data_rdy <= data_rdy_dpi[0];
     end
   end
 

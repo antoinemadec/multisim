@@ -21,9 +21,9 @@ module cpu_dpi_server (
   always @(posedge clk) begin
     bit [63:0] data_dpi;
     if (server_has_started && (!data_vld || data_rdy)) begin
-      bit data_vld_dpi;
-      data_vld_dpi = dpi_cpu_server_get_data(cpu_index, data_dpi) [0];
-      data_vld <= data_vld_dpi;
+      int data_vld_dpi;
+      data_vld_dpi = dpi_cpu_server_get_data(cpu_index, data_dpi);
+      data_vld <= data_vld_dpi[0];
       data <= data_dpi;
     end
   end
