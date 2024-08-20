@@ -12,7 +12,8 @@ using namespace std;
 
 extern "C" int multisim_server_start(char const *server_name);
 extern "C" int multisim_server_get_data(char const *server_name,
-                                        svBitVecVal data[2]);
+                                        svBitVecVal *data,
+                                        int data_width);
 
 #define MULTISIM_SERVER_MAX 256
 Server *server[MULTISIM_SERVER_MAX];
@@ -32,9 +33,10 @@ int multisim_server_start(char const *server_name) {
   return 0;
 }
 
-int multisim_server_get_data(char const *server_name, svBitVecVal *data) {
-  uint32_t read_buf[2];
+int multisim_server_get_data(char const *server_name, svBitVecVal *data, int data_width) {
   int r;
+  int buf_32b_size = (data_width + 31) / 32;
+  uint32_t read_buf[buf_32b_size];
   int idx = server_name_to_idx[server_name];
 
   if (new_socket[idx] < 0) {
@@ -54,7 +56,8 @@ int multisim_server_get_data(char const *server_name, svBitVecVal *data) {
     return 0;
   }
 
-  data[0] = read_buf[0];
-  data[1] = read_buf[1];
+  for (int i = 0; i < buf_32b_size; i++) {
+    data[i] = read_buf[i];
+  }
   return 1;
 }

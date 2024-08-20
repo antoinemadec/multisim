@@ -1,22 +1,25 @@
-import "DPI-C" function int multisim_client_start(
-  string server_name,
-  string server_address,
-  int server_port
-);
-import "DPI-C" function int multisim_client_send_data(input bit [63:0] data);
-
-
 module multisim_client #(
-    parameter string SERVER_RUNTIME_DIRECTORY = "../output_top"
+    parameter string SERVER_RUNTIME_DIRECTORY = "../output_top",
+    parameter int DATA_WIDTH = 64
 ) (
     input bit clk,
     input string server_name,
     output bit data_rdy,
     input bit data_vld,
-    input bit [63:0] data
+    input bit [DATA_WIDTH-1:0] data
 );
 
-  bit [63:0] data_q;
+  import "DPI-C" function int multisim_client_start(
+    string server_name,
+    string server_address,
+    int server_port
+  );
+  import "DPI-C" function int multisim_client_send_data(
+    input bit [DATA_WIDTH-1:0] data,
+    input int data_width
+  );
+
+  bit [DATA_WIDTH-1:0] data_q;
 
   function automatic int get_server_address_and_port(
       input string server_name, output string server_address, output int server_port);
@@ -56,13 +59,13 @@ module multisim_client #(
   always @(posedge clk) begin
     if (data_vld && data_rdy) begin
       int data_rdy_dpi;
-      data_rdy_dpi = multisim_client_send_data(data);
+      data_rdy_dpi = multisim_client_send_data(data, DATA_WIDTH);
       data_rdy <= data_rdy_dpi[0];
       data_q   <= data;
     end
     if (!data_rdy) begin
       int data_rdy_dpi;
-      data_rdy_dpi = multisim_client_send_data(data_q);
+      data_rdy_dpi = multisim_client_send_data(data_q, DATA_WIDTH);
       data_rdy <= data_rdy_dpi[0];
     end
   end

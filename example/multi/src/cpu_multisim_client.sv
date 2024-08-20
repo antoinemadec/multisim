@@ -31,7 +31,9 @@ module cpu_multisim_client;
       .transactions_done(transactions_done)
   );
 
-  multisim_client i_multisim_client (
+  multisim_client #(
+      .DATA_WIDTH(64)
+  ) i_multisim_client (
       .clk        (clk),
       .server_name(server_name),
       .data_rdy   (data_rdy),

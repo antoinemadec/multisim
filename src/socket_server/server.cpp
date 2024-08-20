@@ -67,6 +67,9 @@ char const *Server::getIp() {
     size_t n;
     while ((getline(&p, &n, fp) > 0) && p) {
       char *pos;
+      // stop at 1st '\n' or ' '
+      if ((pos = strchr(p, ' ')) != NULL)
+        *pos = '\0';
       if ((pos = strchr(p, '\n')) != NULL)
         *pos = '\0';
       return p;

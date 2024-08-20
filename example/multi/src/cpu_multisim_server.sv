@@ -11,7 +11,9 @@ module cpu_multisim_server (
     $sformat(server_name, "cpu_%0d", cpu_index);
   end
 
-  multisim_server i_multisim_server (
+  multisim_server #(
+      .DATA_WIDTH(64)
+  ) i_multisim_server (
       .clk        (clk),
       .server_name(server_name),
       .data_rdy   (data_rdy),
