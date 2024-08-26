@@ -15,9 +15,10 @@ if ((compilation)); then
   cp -rfL src/* $output_dir
   cd $output_dir
 
-  verilator --binary -j 0         \
-    cpu_multisim_client.sv cpu.sv \
-    $MULTISIM_SRC/multisim_client.sv \
+  verilator --binary -j 0                 \
+    cpu_multisim_client.sv cpu.sv         \
+    $MULTISIM_SRC/multisim_client_push.sv \
+    $MULTISIM_SRC/multisim_client_pull.sv \
     $MULTISIM_SRC/multisim_client.cpp $MULTISIM_SRC/socket_server/client.cpp
 else
   cd $output_dir

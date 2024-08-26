@@ -1,4 +1,4 @@
-module multisim_server #(
+module multisim_server_pull #(
     parameter int DATA_WIDTH = 64
 ) (
     input bit clk,

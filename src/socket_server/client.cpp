@@ -21,6 +21,7 @@ int Client::start(char const *server_address, int server_port) {
     // printf("\nConnection Failed \n");
     return 0;
   }
+  fcntl(new_socket, F_SETFL, O_NONBLOCK);
 
   return 1;
 }

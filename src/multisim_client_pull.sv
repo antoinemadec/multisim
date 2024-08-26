@@ -1,12 +1,12 @@
-module multisim_client #(
+module multisim_client_pull #(
     parameter string SERVER_RUNTIME_DIRECTORY = "../output_top",
     parameter int DATA_WIDTH = 64
 ) (
     input bit clk,
     input string server_name,
-    output bit data_rdy,
-    input bit data_vld,
-    input bit [DATA_WIDTH-1:0] data
+    input bit data_rdy,
+    output bit data_vld,
+    output bit [DATA_WIDTH-1:0] data
 );
 
   import "DPI-C" function int multisim_client_start(
@@ -14,19 +14,18 @@ module multisim_client #(
     string server_address,
     int server_port
   );
-  import "DPI-C" function int multisim_client_send_data(
-    input bit [DATA_WIDTH-1:0] data,
+  import "DPI-C" function int multisim_client_get_data(
+    string server_name,
+    output bit [DATA_WIDTH-1:0] data,
     input int data_width
   );
-
-  bit [DATA_WIDTH-1:0] data_q;
 
   function automatic int get_server_address_and_port(
       input string server_name, output string server_address, output int server_port);
     int fp;
     string garbage;
     string server_file = {SERVER_RUNTIME_DIRECTORY, "/server_", server_name, ".txt"};
-    $display("multisim_client: server_file=%s", server_file);
+    $display("multisim_client_pull: server_file=%s", server_file);
     fp = $fopen(server_file, "r");
     if (fp == 0) begin
       return 0;
@@ -46,27 +45,22 @@ module multisim_client #(
     ) != 1) begin
       ;
     end
-    $display("multisim_client: server_name=%s server_address=%s server_port=%d", server_name,
+    $display("multisim_client_pull: server_name=%s server_address=%s server_port=%d", server_name,
              server_address, server_port);
     while (multisim_client_start(
         server_name, server_address, server_port
     ) != 1) begin
       ;
     end
-    data_rdy = 1;
   end
 
   always @(posedge clk) begin
-    if (data_vld && data_rdy) begin
-      int data_rdy_dpi;
-      data_rdy_dpi = multisim_client_send_data(data, DATA_WIDTH);
-      data_rdy <= data_rdy_dpi[0];
-      data_q   <= data;
-    end
-    if (!data_rdy) begin
-      int data_rdy_dpi;
-      data_rdy_dpi = multisim_client_send_data(data_q, DATA_WIDTH);
-      data_rdy <= data_rdy_dpi[0];
+    bit [DATA_WIDTH-1:0] data_dpi;
+    if (!data_vld || data_rdy) begin
+      int data_vld_dpi;
+      data_vld_dpi = multisim_client_get_data(server_name, data_dpi, DATA_WIDTH);
+      data_vld <= data_vld_dpi[0];
+      data <= data_dpi;
     end
   end
 

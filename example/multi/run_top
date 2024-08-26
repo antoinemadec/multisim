@@ -10,8 +10,10 @@ cp -rfL src/* output_top
 cd output_top
 
 verilator --binary -j 0                                                    \
+  +define+MULTISIM                                                         \
   top.sv noc.sv cpu_multisim_server.sv                                     \
-  $MULTISIM_SRC/multisim_server.sv                                         \
+  $MULTISIM_SRC/multisim_server_push.sv                                    \
+  $MULTISIM_SRC/multisim_server_pull.sv                                    \
   $MULTISIM_SRC/multisim_server.cpp $MULTISIM_SRC/socket_server/server.cpp \
   -GCPU_NB=$cpu_nb
 cat << EOF

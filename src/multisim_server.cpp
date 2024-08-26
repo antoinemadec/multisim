@@ -14,6 +14,9 @@ extern "C" int multisim_server_start(char const *server_name);
 extern "C" int multisim_server_get_data(char const *server_name,
                                         svBitVecVal *data,
                                         int data_width);
+extern "C" int multisim_server_send_data(char const *server_name,
+                                        const svBitVecVal *data,
+                                        int data_width);
 
 #define MULTISIM_SERVER_MAX 256
 Server *server[MULTISIM_SERVER_MAX];
@@ -58,6 +61,30 @@ int multisim_server_get_data(char const *server_name, svBitVecVal *data, int dat
 
   for (int i = 0; i < buf_32b_size; i++) {
     data[i] = read_buf[i];
+  }
+  return 1;
+}
+
+int multisim_server_send_data(char const *server_name, const svBitVecVal *data, int data_width) {
+  int r;
+  int buf_32b_size = (data_width + 31) / 32;
+  uint32_t send_buf[buf_32b_size];
+  int idx = server_name_to_idx[server_name];
+
+  if (new_socket[idx] < 0) {
+    new_socket[idx] = server[idx]->acceptNewSocket();
+    if (new_socket[idx] < 0) {
+      return 0;
+    }
+  }
+
+  for (int i = 0; i < buf_32b_size; i++) {
+    send_buf[i] = data[i];
+  }
+
+  r = send(new_socket[idx], send_buf, sizeof(send_buf), 0);
+  if (r <= 0) { // send failed
+    return 0;
   }
   return 1;
 }
