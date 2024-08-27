@@ -8,12 +8,7 @@ module multisim_server_pull #(
     output bit [DATA_WIDTH-1:0] data
 );
 
-  import "DPI-C" function void multisim_server_start(string name);
-  import "DPI-C" function int multisim_server_get_data(
-    input string name,
-    output bit [DATA_WIDTH-1:0] data,
-    input int data_width
-  );
+  `include "multisim_server_common.svh"
 
   bit server_has_started = 0;
   initial begin

@@ -7,9 +7,7 @@ cpu_nb="$1"
 # 1- clean server files
 rm -f output_top/server_*.txt
 
-
 # 2- start clients
-(
 # -- compilation
 ./run_cpu compilation 0  > /dev/null
 for ((i=1;i<cpu_nb;i++)); do
@@ -18,9 +16,8 @@ done
 # -- run
 for ((i=0;i<cpu_nb;i++)); do
   ./run_cpu run $i &
+  sleep 0.1
 done
-)&
-
 
 # 3- start server
 ./run_top $cpu_nb

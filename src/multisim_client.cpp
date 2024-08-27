@@ -69,4 +69,3 @@ int multisim_client_get_data(char const *server_name, svBitVecVal *data, int dat
   }
   return 1;
 }
-

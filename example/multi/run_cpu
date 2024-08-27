@@ -17,6 +17,7 @@ if ((compilation)); then
 
   verilator --binary -j 0                 \
     cpu_multisim_client.sv cpu.sv         \
+    +incdir+$MULTISIM_SRC                 \
     $MULTISIM_SRC/multisim_client_push.sv \
     $MULTISIM_SRC/multisim_client_pull.sv \
     $MULTISIM_SRC/multisim_client.cpp $MULTISIM_SRC/socket_server/client.cpp
