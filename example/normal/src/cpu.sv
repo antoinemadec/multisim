@@ -55,7 +55,7 @@ module cpu #(
       transaction_cpu_to_noc_done <= 1;
     end else begin
       x <= xorshift64star(x, COMPUTATION_COMPLEXITY * 1000000);
-      wait_n_cycles(int'(x[15:0]));
+      wait_n_cycles(int'(x[3:0])); // 0 to 7 cycles extra delay
       data_cpu_to_noc_vld <= 1;
       data_cpu_to_noc <= x;
       $display("[cpu_%0d] CPU sent 0x%016x (transaction_cpu_to_noc %0d/%0d)", cpu_index, x,
