@@ -67,8 +67,9 @@ for f in glob.glob("*/batch_*/sim.log"):
     else:
         d_multi[cpu_nb] = simulation
 
-for cpu_nb in d_normal:
+for cpu_nb in sorted(d_normal):
     print(d_normal[cpu_nb])
+for cpu_nb in sorted(d_multi):
     print(d_multi[cpu_nb])
 
 plot(d_normal, d_multi)
