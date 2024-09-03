@@ -18,6 +18,37 @@ import "DPI-C" function int multisim_client_send_data(
 );
 
 //-----------------------------------------------------------
+// end of simulation
+//-----------------------------------------------------------
+initial begin
+  multisim_client_end_of_simulation eos;
+  eos = new();
+
+  // make sure only 1 process handles eos to improve performance
+  @(posedge clk);
+  if (eos.handles_end_of_simulation()) begin
+    string server_exit_file = {SERVER_RUNTIME_DIRECTORY, "/server_exit"};
+    int fp;
+    int check_every_n_cycles;
+    if (!$value$plusargs("MULTISIM_EOS_CHECK_EVERY_N_CYCLES=%d", check_every_n_cycles)) begin
+      check_every_n_cycles = 1000;
+    end
+
+    forever begin
+      repeat (check_every_n_cycles) begin
+        @(posedge clk);
+      end
+      fp = $fopen(server_exit_file, "r");  // can be checked ~2M times/sec on Verilator
+      if (fp != 0) begin
+        $fclose(fp);
+        $display("multisim_client: end of simulation");
+        $finish;
+      end
+    end
+  end
+end
+
+//-----------------------------------------------------------
 // functions/tasks
 //-----------------------------------------------------------
 function automatic int get_server_address_and_port(
@@ -36,7 +67,8 @@ function automatic int get_server_address_and_port(
   return 1;
 endfunction
 
-task automatic connnect_to_server(input string server_runtime_directory, input string server_name);
+function automatic void connnect_to_server(input string server_runtime_directory,
+                                           input string server_name);
   string server_address;
   int server_port;
   while (get_server_address_and_port(
@@ -51,4 +83,4 @@ task automatic connnect_to_server(input string server_runtime_directory, input s
   ) != 1) begin
     ;
   end
-endtask
+endfunction

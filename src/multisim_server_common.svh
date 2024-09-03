@@ -12,3 +12,17 @@ import "DPI-C" function int multisim_server_send_data(
   input bit [DATA_WIDTH-1:0] data,
   input int data_width
 );
+
+//-----------------------------------------------------------
+// end of simulation
+//-----------------------------------------------------------
+final begin
+  string server_exit_file = "./server_exit";
+  int fp;
+  fp = $fopen(server_exit_file, "w");
+  if (fp == 0) begin
+    $fatal("cannot write server_exit_file");
+  end
+  $fwrite(fp, "");
+  $fclose(fp);
+end

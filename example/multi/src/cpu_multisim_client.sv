@@ -26,10 +26,6 @@ module cpu_multisim_client;
     end
     $sformat(server_name_cpu_to_noc, "cpu_to_noc_%0d", cpu_index);
     $sformat(server_name_noc_to_cpu, "noc_to_cpu_%0d", cpu_index);
-
-    wait (transactions_done);
-    repeat (2) @(posedge clk);
-    $finish;
   end
 
   cpu i_cpu (

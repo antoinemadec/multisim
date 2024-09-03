@@ -15,4 +15,3 @@ for cpu_nb in "${cpu_nb_list[@]}" ; do
     mv sim.log output* $directory
   done
 done
-
