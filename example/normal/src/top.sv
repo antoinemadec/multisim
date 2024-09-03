@@ -1,4 +1,8 @@
 module top #(
+`ifdef MULTISIM
+    // generate dummy client/server channels to see impact on performance
+    parameter int EXTRA_DUMMY_CHANNELS = 0,
+`endif
     parameter int CPU_NB = 4
 );
 
@@ -31,7 +35,7 @@ module top #(
 `ifndef MULTISIM
     cpu i_cpu (
 `else
-    cpu_multisim_server i_cpu_multisim_server (
+    cpu_multisim_server #(.EXTRA_DUMMY_CHANNELS(EXTRA_DUMMY_CHANNELS)) i_cpu_multisim_server (
 `endif
         .clk                (clk),
         .cpu_index          (cpu_idx),

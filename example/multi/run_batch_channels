@@ -1,0 +1,18 @@
+#!/bin/bash
+
+cpu_nb_list=(1 2)
+extra_dummy_channels_list=(0 31 63)
+
+for cpu_nb in "${cpu_nb_list[@]}" ; do
+  for extra_dummy_channels in "${extra_dummy_channels_list[@]}" ; do
+    echo "-- cpu_nb=$cpu_nb extra_dummy_channels=$extra_dummy_channels"
+    rm -rf output*
+    ./run $cpu_nb &> sim.log
+
+    echo "-- saving data"
+    directory=batch_cpu_nb_${cpu_nb}_extra_dummy_channels_${extra_dummy_channels}
+    mkdir -p $directory
+    mv sim.log output* $directory
+  done
+done
+

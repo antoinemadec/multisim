@@ -3,7 +3,10 @@
 set -e
 
 cpu_nb="$1"
+extra_dummy_channels="$2"
+
 [ "$cpu_nb" = "" ] && cpu_nb=4
+[ "$extra_dummy_channels" = "" ] && extra_dummy_channels=0
 
 mkdir -p output_top
 cp -rfL src/* output_top
@@ -16,7 +19,7 @@ verilator --binary -j 0                                                    \
   $MULTISIM_SRC/multisim_server_push.sv                                    \
   $MULTISIM_SRC/multisim_server_pull.sv                                    \
   $MULTISIM_SRC/multisim_server.cpp $MULTISIM_SRC/socket_server/server.cpp \
-  -GCPU_NB=$cpu_nb
+  -GCPU_NB=$cpu_nb -GEXTRA_DUMMY_CHANNELS=$extra_dummy_channels
 cat << EOF
 
 ----------------------------------------

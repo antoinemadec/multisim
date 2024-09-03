@@ -7,6 +7,9 @@ if [ "$1" = "compilation" ]; then
   compilation=1
 fi
 cpu_index="$2"
+extra_dummy_channels="$3"
+
+[ "$extra_dummy_channels" = "" ] && extra_dummy_channels=0
 
 output_dir=output_cpu_$cpu_index
 
@@ -20,7 +23,8 @@ if ((compilation)); then
     +incdir+$MULTISIM_SRC                 \
     $MULTISIM_SRC/multisim_client_push.sv \
     $MULTISIM_SRC/multisim_client_pull.sv \
-    $MULTISIM_SRC/multisim_client.cpp $MULTISIM_SRC/socket_server/client.cpp
+    $MULTISIM_SRC/multisim_client.cpp $MULTISIM_SRC/socket_server/client.cpp \
+    -GEXTRA_DUMMY_CHANNELS=$extra_dummy_channels
 else
   cd $output_dir
 
