@@ -47,4 +47,9 @@ module top #(
     );
   end
 
+  //initial begin
+  //  $dumpfile("dump.vcd");
+  //  $dumpvars();
+  //end
+
 endmodule

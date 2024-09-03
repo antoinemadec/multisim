@@ -12,6 +12,7 @@ cd output
 verilator --binary -j 0 \
   top.sv noc.sv cpu.sv  \
   -GCPU_NB=$cpu_nb
+  # --trace --trace-structs
 cat << EOF
 
 ----------------------------------------
