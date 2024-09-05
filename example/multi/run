@@ -29,7 +29,3 @@ done
 
 # 3- start server
 ./run_top $cpu_nb $extra_dummy_channels
-
-# 4- exit clients
-touch output_top/server_exit
-sleep 1
