@@ -63,6 +63,10 @@ function automatic int get_server_address_and_port(
   end
   $fscanf(fp, "%s %s", garbage, server_address);
   $fscanf(fp, "%s %d", garbage, server_port);
+  // in case file is being written while being read
+  if ((server_address == "") || (server_port == 0)) begin
+    return 0;
+  end
   $fclose(fp);
   return 1;
 endfunction
@@ -78,6 +82,7 @@ function automatic void connnect_to_server(input string server_runtime_directory
   end
   $display("multisim_client: server_name=%s server_address=%s server_port=%d", server_name,
            server_address, server_port);
+  $fflush;
   while (multisim_client_start(
       server_name, server_address, server_port
   ) != 1) begin
