@@ -15,6 +15,12 @@ Reusing [this example](./example/multi/src) where we have:
 
 # ⚙ usage
 ## testbench
+### example
+See the following files from the [example](./example/multi/src):
+* [server testbench](./example/normal/src/top.sv)
+* [server replacement of CPU module](./example/multi/src/cpu_multisim_server.sv)
+* [client simulation of CPU module](./example/multi/src/cpu_multisim_client.sv)
+
 ### channels
 * **server simulation** and **client simulations** communicate through channels
 * channels use a `rdy/vld` protocol to exchange `DATA_WIDTH` bits
@@ -74,10 +80,6 @@ module multisim_client_pull #(
     output bit [DATA_WIDTH-1:0] data
 );
 ````
-See the following file of the [example](./example/multi/src):
-* [server testbench](./example/multi/src/top.sv)
-* [server replacement of CPU module](./example/multi/src/cpu_multisim_server.sv)
-* [client simulation of CPU module](./example/multi/src/cpu_multisim_client.sv)
 
 ## compilation
 1. source [env.sh](./env.sh)
@@ -97,6 +99,7 @@ Pros:
 * speed: split your big DUT in as many smaller parts as you want
 * cost: server CPUs are cheaper than emulation solution usually
 * bringup time: super easy modules, simple interface (e.g.: AXI is 5 channels)
+* interoperability: each server/client can use different simulators (Verilator, VCS, Questa, Xcelium, etc)
 
 Cons:
 * ⚠ **no cycle accuracy** ⚠: functionally accurate, but not cycle accurate

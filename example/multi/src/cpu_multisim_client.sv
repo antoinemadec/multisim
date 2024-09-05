@@ -93,13 +93,6 @@ module cpu_multisim_client;
     bit dummy_noc_to_cpu_vld;
     bit [63:0] dummy_noc_to_cpu;
 
-    //always @(posedge clk) begin
-    //  if (dummy_noc_to_cpu_vld) begin
-    //    $display("DUMMY: [cpu_%0d][dummy_ch_%0d] CPU received 0x%016x", cpu_index,
-    //             dummy_channel_idx, dummy_noc_to_cpu);
-    //  end
-    //end
-
     multisim_client_pull #(
         .SERVER_RUNTIME_DIRECTORY("../output_top"),
         .DATA_WIDTH(64)
