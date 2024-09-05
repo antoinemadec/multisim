@@ -65,6 +65,7 @@ function automatic int get_server_address_and_port(
   $fscanf(fp, "%s %d", garbage, server_port);
   // in case file is being written while being read
   if ((server_address == "") || (server_port == 0)) begin
+    $fclose(fp);
     return 0;
   end
   $fclose(fp);
