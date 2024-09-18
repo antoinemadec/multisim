@@ -1,3 +1,5 @@
+🏁 simulate your RTL with real multi-threaded speed 🏁
+
 # 💡 rationale
 RTL simulations are typically single threaded and don't scale very well when your DUT size increases.
 
