@@ -6,6 +6,17 @@ Typically, you can have:
 * 1 **server simulation** with your DUT skeleton (NOC, etc)
 * N **client simulations** with 1 big instance each (computing core, etc)
 
+## example: normal vs multisim simulation
+Assuming your original simulation has N CPUs that take a lot of simulation time.
+
+You could transform this DUT:  
+![normal simulation](./.assets/multisim_normal.drawio.png)
+
+Into this one, running on N+1 simulation instances:  
+![multi simulations](./.assets/multisim_multi.drawio.png)
+
+If the CPU is the bottleneck in terms of performance, you could speed up your simulation N times.
+
 # 🚄 performance
 Reusing [this example](./example/multi/src) where we have:
 * 1 **server simulation** with 1 NOC
