@@ -102,9 +102,8 @@ grep 'Number of Boards' veloce.log/compile_* | sed 's/.*Boards/Boards/'
 ) > info.txt
 
 banner "compile C"
-# compile server + DPI
-g++ -o libdpi.so -g -shared -fPIC -m32 \
-  -DEMULATION \
-  -I${VELOCE_HOME}/tbx/include \
+g++ -o libdpi.so -g -shared -fPIC -m32        \
+  -DEMULATION                                 \
+  -I${VELOCE_HOME}/tbx/include                \
   $MULTISIM_SRC/core/multisim_server.cpp      \
   $MULTISIM_SRC/core/socket_server/server.cpp

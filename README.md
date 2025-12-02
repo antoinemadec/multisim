@@ -30,11 +30,11 @@ Into this one, running on N+1 simulation instances:
 If the CPU is the bottleneck in terms of performance, you could speed up your simulation N times.
 
 # 🚄 performance
-Reusing [this example](./example/noc/multi/src) where we have:
+Reusing [this example](./example/sim/core/multi/src) where we have:
 * 1 **server simulation** with 1 NOC
 * `CPU number` **client simulations** with 1 `cpu` (slow module) each
 
-![sim speed](./example/noc/sim_speed.png)
+![sim speed](./example/sim/core/sim_speed.png)
 
 # ⚙ usage
 ## available modules
@@ -48,10 +48,10 @@ Reusing [this example](./example/noc/multi/src) where we have:
 
 ## testbench
 ### example
-See the following files from the [example](./example/noc/multi/src):
-* [server testbench](./example/noc/normal/src/top.sv)
-* [server replacement of CPU module](./example/noc/multi/src/cpu_multisim_server.sv)
-* [client simulation of CPU module](./example/noc/multi/src/cpu_multisim_client.sv)
+See the following files from the [example](./example/sim/core/multi/src):
+* [server testbench](./example/sim/core/normal/src/top.sv)
+* [server replacement of CPU module](./example/sim/core/multi/src/cpu_multisim_server.sv)
+* [client simulation of CPU module](./example/sim/core/multi/src/cpu_multisim_client.sv)
 
 ### channels
 * **server simulation** and **client simulations** communicate through channels
@@ -68,14 +68,14 @@ See the following files from the [example](./example/noc/multi/src):
 ## compilation
 1. source [env.sh](./env.sh)
 2. pass the right files to your simulator:
-* server simulation, see [example](./example/noc/multi/run_cpu)
-* client simulation, see [example](./example/noc/multi/run_top)
+* server simulation, see [example](./example/sim/core/multi/run_cpu)
+* client simulation, see [example](./example/sim/core/multi/run_top)
 
 ## runtime
-See the [example](./example/noc/multi/run_cpu):
-* **simulation** (server+clients) [run script](./example/noc/multi/run)
-* **server simulation** [run script](./example/noc/multi/run_top)
-* **client simulation** [run script](./example/noc/multi/run_cpu)
+See the [example](./example/sim/core/multi/run_cpu):
+* **simulation** (server+clients) [run script](./example/sim/core/multi/run)
+* **server simulation** [run script](./example/sim/core/multi/run_top)
+* **client simulation** [run script](./example/sim/core/multi/run_cpu)
 
 # ⚖ pros and cons
 Pros:
