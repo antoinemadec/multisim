@@ -8,10 +8,32 @@ module top;
   end
 
   //-----------------------------------------------------------
+  // exit
+  //-----------------------------------------------------------
+  bit exit;
+
+  multisim_server_pull #(
+      .DATA_WIDTH(1)
+  ) i_multisim_server_pull_exit (
+      .clk        (clk),
+      .server_name("exit"),
+      .data_rdy   (1),
+      .data_vld   (exit),
+      .data       (/*unused*/)
+  );
+
+  always @(posedge clk) begin
+    if (exit) begin
+      $display("exit");
+      $finish;
+    end
+  end
+
+  //-----------------------------------------------------------
   // loopback 1: 32b data
   //-----------------------------------------------------------
   bit [31:0] rx32_data;
-  bit [31:0] rx32_data_vld;
+  bit rx32_data_vld;
 
   multisim_server_pull #(
       .DATA_WIDTH(32)
@@ -37,7 +59,7 @@ module top;
   // loopback 2: 64b data
   //-----------------------------------------------------------
   bit [63:0] rx64_data;
-  bit [63:0] rx64_data_vld;
+  bit rx64_data_vld;
 
   multisim_server_pull #(
       .DATA_WIDTH(64)
