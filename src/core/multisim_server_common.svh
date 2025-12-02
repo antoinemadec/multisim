@@ -52,6 +52,8 @@ endfunction
 //-----------------------------------------------------------
 // end of simulation
 //-----------------------------------------------------------
+// TODO: can it work in emulation?
+`ifndef EMULATION
 final begin
   string server_exit_file = "multisim/server_exit";
   int fp;
@@ -62,3 +64,4 @@ final begin
   $fwrite(fp, "");
   $fclose(fp);
 end
+`endif
