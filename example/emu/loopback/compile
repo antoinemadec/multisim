@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+
+set -e
+
+compile_args="$@"
+
+
+#--------------------------------------------------------------
+# functions
+#--------------------------------------------------------------
+usage() {
+  cat << EOF
+usage: $(basename $0) [-h] [-o OUPUT_DIR]
+
+compile an emulation database in OUTPUT_DIR
+
+where:
+  -h                        : display this help
+  -o OUTPUT_DIR             : build in OUTPUT_DIR
+
+EOF
+}
+
+
+error() {
+  >&2 echo "ERROR: $@"
+  exit 1
+}
+
+
+banner() {
+cat << EOF
+
+#--------------------------------------------------------------
+# $@
+#--------------------------------------------------------------
+EOF
+}
+
+
+compile_veloce() {
+  local lib_dir=veloce_rundir
+  local rtl_sv_lib=vel_sv_work
+
+  cp -rf $emulation_dir/input/compilation/* .
+
+  banner "veloce: lib"
+  mkdir $lib_dir
+  vellib $lib_dir/$rtl_sv_lib
+
+  banner "veloce: analyze sv"
+  velanalyze -sv -mfcu -work $rtl_sv_lib $MULTISIM_SRC/core/multisim_server_*.sv +define+EMULATION
+  velanalyze -sv -mfcu -work $rtl_sv_lib $emulation_dir/src/*.sv
+
+  banner "veloce: compilation"
+  velcomp
+}
+
+
+#--------------------------------------------------------------
+# execution
+#--------------------------------------------------------------
+output_dir="output"
+
+while [ "$#" -gt 0 ]
+do
+  case "$1" in
+    -h)
+      usage
+      exit 0
+      ;;
+    -o)
+      shift 1
+      output_dir=$1
+      shift 1
+      ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+output_dir=$(readlink -f $output_dir)
+emulation_dir="$(readlink -e $(dirname $0))"
+
+banner "remove $output_dir"
+rm -rf $output_dir
+mkdir -p $output_dir
+cd $output_dir
+
+banner "compile_veloce"
+compile_veloce
+
+banner "copy runtime files"
+cp -rf $emulation_dir/input/runtime/* .
+
+banner "create info.txt"
+(
+grep Frequency veloce.log/compile_* | sed 's/.*Freq/Freq/'
+grep 'Number of Boards' veloce.log/compile_* | sed 's/.*Boards/Boards/'
+) > info.txt
+
+banner "compile C"
+# compile server + DPI
+g++ -o libdpi.so -g -shared -fPIC -m32 \
+  -DEMULATION \
+  -I${VELOCE_HOME}/tbx/include \
+  $MULTISIM_SRC/core/multisim_server.cpp      \
+  $MULTISIM_SRC/core/socket_server/server.cpp

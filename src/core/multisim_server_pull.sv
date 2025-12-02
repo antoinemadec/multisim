@@ -12,7 +12,9 @@ module multisim_server_pull #(
 
   bit server_has_started = 0;
   initial begin
+`ifndef EMULATION
     wait (server_name != "");
+`endif
     multisim_server_start(server_name);
     server_has_started = 1;
   end

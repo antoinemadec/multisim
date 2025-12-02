@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+set -e
+
+RUNTIME_DIR="$(readlink -e $(dirname $0))"
+
+
+#--------------------------------------------------------------
+# functions
+#--------------------------------------------------------------
+usage() {
+  cat << EOF
+usage: $(basename $0) [ARGS]
+
+where ARGS are:
+  -h                : display this help
+  -g|--gui          : use GUI
+EOF
+}
+
+
+#--------------------------------------------------------------
+# execution
+#--------------------------------------------------------------
+cd $RUNTIME_DIR
+
+cli_gui_options="-c"
+while [ "$#" -gt 0 ]
+do
+  case "$1" in
+    -h)
+      usage
+      exit 0
+      ;;
+    -g|--gui)
+      shift 1
+      cli_gui_options="-gui"
+      ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+export LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH"
+cmd="velrun $cli_gui_options -emul $Emulator -sv_lib libdpi -do run.tcl"
+
+echo $cmd
+$cmd

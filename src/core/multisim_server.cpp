@@ -9,11 +9,17 @@
 
 using namespace std;
 
+#ifdef EMULATION
+typedef uint32_t *data_handle_t;
+#else
+typedef svOpenArrayHandle data_handle_t;
+#endif
+
 extern "C" int multisim_server_start(char const *server_name);
-extern "C" int multisim_server_get_data(char const *server_name, svOpenArrayHandle data_handle,
+extern "C" int multisim_server_get_data(char const *server_name, data_handle_t data_handle,
                                         int data_width);
-extern "C" int multisim_server_send_data(char const *server_name,
-                                         const svOpenArrayHandle data_handle, int data_width);
+extern "C" int multisim_server_send_data(char const *server_name, const data_handle_t data_handle,
+                                         int data_width);
 
 #define MULTISIM_SERVER_MAX 1024
 Server *server[MULTISIM_SERVER_MAX];
@@ -31,13 +37,16 @@ int multisim_server_start(char const *server_name) {
   return 0;
 }
 
-int multisim_server_get_data(char const *server_name, svOpenArrayHandle data_handle,
-                             int data_width) {
+int multisim_server_get_data(char const *server_name, data_handle_t data_handle, int data_width) {
   int r;
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t read_buf[buf_32b_size];
   int idx = server_name_to_idx[server_name];
+#ifdef EMULATION
+  uint32_t *data = data_handle;
+#else
   svBitVecVal *data = (svBitVecVal *)svGetArrayPtr(data_handle);
+#endif
 
   if (sockets[idx] < 0) {
     sockets[idx] = server[idx]->acceptNewSocket();
@@ -63,13 +72,17 @@ int multisim_server_get_data(char const *server_name, svOpenArrayHandle data_han
 }
 
 // #define SIMULATE_SEND_FAIL_SERVER
-int multisim_server_send_data(char const *server_name, const svOpenArrayHandle data_handle,
+int multisim_server_send_data(char const *server_name, const data_handle_t data_handle,
                               int data_width) {
   int r;
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t send_buf[buf_32b_size];
   int idx = server_name_to_idx[server_name];
+#ifdef EMULATION
+  uint32_t *data = data_handle;
+#else
   svBitVecVal *data = (svBitVecVal *)svGetArrayPtr(data_handle);
+#endif
 
   if (sockets[idx] < 0) {
     sockets[idx] = server[idx]->acceptNewSocket();
