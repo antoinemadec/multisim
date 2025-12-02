@@ -84,7 +84,10 @@ int multisim_server_send_data(char const *server_name, const data_handle_t data_
   svBitVecVal *data = (svBitVecVal *)svGetArrayPtr(data_handle);
 #endif
 
-  if (sockets[idx] < 0) {
+  // 0: client disconnected
+  r = read(sockets[idx], send_buf, 1);
+
+  if (sockets[idx] < 0 || r == 0) {
     sockets[idx] = server[idx]->acceptNewSocket();
     if (sockets[idx] < 0) {
       return 0;
