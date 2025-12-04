@@ -6,15 +6,27 @@ Client::Client(char const *server_info_dir, char const *name)
     : serverInfoDir(server_info_dir), serverName(name) {};
 
 void Client::start() {
+  int i;
   string server_file = string(serverInfoDir) + "/server_" + string(serverName) + ".txt";
-  printf("Client: waiting for server %s info file %s\n", serverName, server_file.c_str());
+
+  i = 0;
   while (!getServerIpAndPort(server_file.c_str())) {
+    if (i == 0) {
+      printf("Client: waiting for server %s info file %s\n", serverName, server_file.c_str());
+    }
+    i++;
+    usleep(100000); // wait for 0.1s
+  };
+
+  i = 0;
+  while (!startWithAddressAndPort(serverIp, serverPort)) {
+    if (i == 0) {
+      printf("Client: failed to connect to server %s at %s:%0d\n", serverName, serverIp, serverPort);
+    }
+    i++;
     usleep(100000); // wait for 0.1s
   };
   printf("Client: connect to server %s at %s:%0d\n", serverName, serverIp, serverPort);
-  while (!startWithAddressAndPort(serverIp, serverPort)) {
-    usleep(100000); // wait for 0.1s
-  };
 }
 
 int Client::startWithAddressAndPort(char const *server_address, int server_port) {
@@ -70,7 +82,7 @@ int Client::getServerIpAndPort(char const *server_file) {
     return 0;
   }
   fscanf(fp, "%s %s", &garbage[0], &ip_str[0]); // read "ip: xxx.xxx.xxx.xxx"
-  serverIp = (char *) malloc(128);
+  serverIp = (char *)malloc(128);
   strcpy((char *)serverIp, &ip_str[0]);
   fscanf(fp, "%s %d", &garbage[0], &serverPort); // read "port: xxxxx"
   fclose(fp);

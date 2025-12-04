@@ -102,8 +102,16 @@ grep 'Number of Boards' veloce.log/compile_* | sed 's/.*Boards/Boards/'
 ) > info.txt
 
 banner "compile C"
+# server: libdpi.so, needed by the emulator at runtime
 g++ -o libdpi.so -g -shared -fPIC -m32        \
   -DEMULATION                                 \
   -I${VELOCE_HOME}/tbx/include                \
   $MULTISIM_SRC/core/multisim_server.cpp      \
   $MULTISIM_SRC/core/socket_server/server.cpp
+# client: run_sw_test binary communicating with the server
+g++ -o run_sw_test                            \
+  -DSW                                        \
+  -I${MULTISIM_SRC}/core                      \
+  $MULTISIM_SRC/core/multisim_client.cpp      \
+  $MULTISIM_SRC/core/socket_server/client.cpp \
+  $emulation_dir/src/sw_test.cpp

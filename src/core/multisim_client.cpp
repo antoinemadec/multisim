@@ -1,7 +1,7 @@
+#include "multisim_client.h"
 #include "socket_server/client.h"
 
 #include "stdlib.h"
-#include "svdpi.h"
 #include <cassert>
 #include <map>
 #include <stdio.h>
@@ -10,14 +10,6 @@
 
 using namespace std;
 
-extern "C" void multisim_client_start(char const *server_runtime_directory,
-                                      char const *server_name);
-extern "C" int multisim_client_send_data(char const *server_name,
-                                         const svOpenArrayHandle data_handle, int data_width);
-extern "C" int multisim_client_get_data(char const *server_name, svOpenArrayHandle data_handle,
-                                        int data_width);
-
-#define MULTISIM_SERVER_MAX 256
 int sockets[MULTISIM_SERVER_MAX];
 int server_idx = 0;
 map<string, int> server_name_to_idx;
@@ -32,6 +24,14 @@ void multisim_client_start(char const *server_runtime_directory, char const *ser
   client->start();
   sockets[server_idx] = client->getSocket();
   server_name_to_idx[server_name] = server_idx;
+
+#if defined(SW)
+  // make socket blocking
+  int flags;
+  flags = fcntl(sockets[server_idx], F_GETFD, 0);
+  flags &= ~O_NONBLOCK;
+  fcntl(sockets[server_idx], F_SETFL, flags);
+#endif
 
   // dump info
   string first_server_name = server_name_to_idx.begin()->first;
@@ -55,13 +55,17 @@ void multisim_client_start(char const *server_runtime_directory, char const *ser
 }
 
 // #define SIMULATE_SEND_FAIL_CLIENT
-int multisim_client_send_data(char const *server_name, const svOpenArrayHandle data_handle,
+int multisim_client_send_data(char const *server_name, const data_handle_t data_handle,
                               int data_width) {
   int r;
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t send_buf[buf_32b_size];
   int idx = server_name_to_idx[server_name];
+#if defined(EMULATION) || defined(SW)
+  uint32_t *data = data_handle;
+#else
   svBitVecVal *data = (svBitVecVal *)svGetArrayPtr(data_handle);
+#endif
 
   for (int i = 0; i < buf_32b_size; i++) {
     send_buf[i] = data[i];
@@ -83,13 +87,16 @@ int multisim_client_send_data(char const *server_name, const svOpenArrayHandle d
   return 1;
 }
 
-int multisim_client_get_data(char const *server_name, svOpenArrayHandle data_handle,
-                             int data_width) {
+int multisim_client_get_data(char const *server_name, data_handle_t data_handle, int data_width) {
   int r;
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t read_buf[buf_32b_size];
   int idx = server_name_to_idx[server_name];
+#if defined(EMULATION) || defined(SW)
+  uint32_t *data = data_handle;
+#else
   svBitVecVal *data = (svBitVecVal *)svGetArrayPtr(data_handle);
+#endif
 
   r = read(sockets[idx], read_buf, sizeof(read_buf));
   if (r <= 0) {
