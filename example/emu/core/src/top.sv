@@ -30,33 +30,7 @@ module top;
   end
 
   //-----------------------------------------------------------
-  // loopback 1: 32b data
-  //-----------------------------------------------------------
-  bit [31:0] rx32_data;
-  bit rx32_data_vld;
-
-  multisim_server_pull #(
-      .DATA_WIDTH(32)
-  ) i_multisim_server_pull32 (
-      .clk        (clk),
-      .server_name("rx32"),
-      .data_rdy   (1),
-      .data_vld   (rx32_data_vld),
-      .data       (rx32_data)
-  );
-
-  multisim_server_push #(
-      .DATA_WIDTH(32)
-  ) i_multisim_server_push32 (
-      .clk        (clk),
-      .server_name("tx32"),
-      .data_rdy   (/*unused*/),
-      .data_vld   (rx32_data_vld),
-      .data       (rx32_data)
-  );
-
-  //-----------------------------------------------------------
-  // loopback 2: 64b data
+  // loopback: 64b data
   //-----------------------------------------------------------
   bit [63:0] rx64_data;
   bit rx64_data_vld;

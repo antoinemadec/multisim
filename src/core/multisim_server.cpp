@@ -1,27 +1,14 @@
+#include "multisim_server.h"
 #include "socket_server/server.h"
 
 #include <cassert>
 #include <map>
 #include <stdlib.h>
 #include <string>
-#include <svdpi.h>
 #include <unistd.h>
 
 using namespace std;
 
-#ifdef EMULATION
-typedef uint32_t *data_handle_t;
-#else
-typedef svOpenArrayHandle data_handle_t;
-#endif
-
-extern "C" int multisim_server_start(char const *server_name);
-extern "C" int multisim_server_get_data(char const *server_name, data_handle_t data_handle,
-                                        int data_width);
-extern "C" int multisim_server_send_data(char const *server_name, const data_handle_t data_handle,
-                                         int data_width);
-
-#define MULTISIM_SERVER_MAX 1024
 Server *server[MULTISIM_SERVER_MAX];
 int sockets[MULTISIM_SERVER_MAX];
 int server_idx = 0;

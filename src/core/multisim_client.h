@@ -18,7 +18,7 @@ typedef uint32_t *data_handle_t;
 typedef svOpenArrayHandle data_handle_t;
 #endif
 
-#define MULTISIM_SERVER_MAX 256
+#define MULTISIM_SERVER_MAX 1024
 
 // start client and get socket
 extern "C" void multisim_client_start(char const *server_runtime_directory,
