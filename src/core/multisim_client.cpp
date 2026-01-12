@@ -15,7 +15,7 @@ map<string, int> server_name_to_idx;
 
 void multisim_client_start(char const *server_runtime_directory, char const *server_name) {
   Client *client;
-  string server_info_dir = string(server_runtime_directory) + "/multisim";
+  string server_info_dir = string(server_runtime_directory) + "/.multisim";
 
   assert(server_idx < MULTISIM_SERVER_MAX);
 

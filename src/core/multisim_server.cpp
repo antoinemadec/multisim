@@ -15,7 +15,7 @@ map<string, int> server_name_to_idx;
 
 int multisim_server_start(char const *server_name) {
   assert(server_idx < MULTISIM_SERVER_MAX);
-  server[server_idx] = new Server("multisim", server_name);
+  server[server_idx] = new Server(".multisim", server_name);
   server[server_idx]->start();
   sockets[server_idx] = -1;
   server_name_to_idx[server_name] = server_idx;
