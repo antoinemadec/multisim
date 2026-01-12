@@ -1,3 +1,6 @@
+# ⚠️ Warning: This repo is not the official one, it is meant to be used as a submodule of [qemu_hello_world](https://git.axelera.ai/jerome.sauger/qemu_hello_world/-/tree/master)
+
+
 <div align="center">
 
 <img alt="Multisim" height="280" src="./.assets/multisim_light.png" />
