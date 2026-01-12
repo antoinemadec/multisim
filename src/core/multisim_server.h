@@ -8,11 +8,11 @@
 #pragma once
 
 #include <stdint.h>
-#if !defined(SW)
+#if !defined(MULTISIM_SW)
 #include <svdpi.h>
 #endif
 
-#if defined(EMULATION) || defined(SW)
+#if defined(EMULATION) || defined(MULTISIM_SW)
 typedef uint32_t *data_handle_t;
 #else
 typedef svOpenArrayHandle data_handle_t;

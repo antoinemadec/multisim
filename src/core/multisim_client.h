@@ -8,11 +8,11 @@
 #pragma once
 
 #include <stdint.h>
-#if !defined(SW)
+#if !defined(MULTISIM_SW)
 #include <svdpi.h>
 #endif
 
-#if defined(EMULATION) || defined(SW)
+#if defined(EMULATION) || defined(MULTISIM_SW)
 typedef uint32_t *data_handle_t;
 #else
 typedef svOpenArrayHandle data_handle_t;
@@ -20,14 +20,21 @@ typedef svOpenArrayHandle data_handle_t;
 
 #define MULTISIM_SERVER_MAX 1024
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // start client and get socket
-extern "C" void multisim_client_start(char const *server_runtime_directory,
+void multisim_client_start(char const *server_runtime_directory,
                                       char const *server_name);
 
 // send data to server
-extern "C" int multisim_client_push(char const *server_name, const data_handle_t data_handle,
+int multisim_client_push(char const *server_name, const data_handle_t data_handle,
                                     int data_width);
 
 // get data from server
-extern "C" int multisim_client_pull(char const *server_name, data_handle_t data_handle,
+int multisim_client_pull(char const *server_name, data_handle_t data_handle,
                                     int data_width);
+#ifdef __cplusplus
+}
+#endif
