@@ -1,7 +1,7 @@
 RELEASE_DIR ?= $(PWD)
 CORE_DIR=./src/core
 
-MULTISIM_HEADERS := $(CORE_DIR)/multisim_client.h $(CORE_DIR)/multisim_server.h
+MULTISIM_HEADERS := $(CORE_DIR)/multisim_client.h $(CORE_DIR)/multisim_server.h $(CORE_DIR)/multisim_common.h
 SOCKET_SERVER_HEADERS := $(CORE_DIR)/socket_server/client.h $(CORE_DIR)/socket_server/server.h
 HEADERS := $(MULTISIM_HEADERS) $(SOCKET_SERVER_HEADERS)
 CLIENT_SRC := $(CORE_DIR)/multisim_client.cpp $(CORE_DIR)/socket_server/client.cpp
