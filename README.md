@@ -79,10 +79,10 @@ See the following files from the [example](./example/sim_server/sim_client/core/
 [multisim_client](./src/core/multisim_client.cpp) and [multisim_server](./src/core/multisim_server.cpp) can be compiled as shared objects with the following command:
 
 ```bash
-make RELEASE_DIR=...
+make RELEASE_DIR=... TARGET=SIMULATION|EMULATION|SW
 ```
 
-The .so libs and their headers are located in `RELEASE_DIR`.
+The .so libs their headers are located in `RELEASE_DIR`.
 
 
 ## runtime
