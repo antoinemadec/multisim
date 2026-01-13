@@ -74,6 +74,17 @@ See the following files from the [example](./example/sim_server/sim_client/core/
 * server simulation, see [example](./example/sim_server/sim_client/core/multi/run_cpu)
 * client simulation, see [example](./example/sim_server/sim_client/core/multi/run_top)
 
+### shared libs
+
+[multisim_client](./src/core/multisim_client.cpp) and [multisim_server](./src/core/multisim_server.cpp) can be compiled as shared objects with the following command:
+
+```bash
+make RELEASE_DIR=...
+```
+
+The .so libs and their headers are located in `RELEASE_DIR`.
+
+
 ## runtime
 See the [example](./example/sim_server/sim_client/core/multi/run_cpu):
 * **simulation** (server+clients) [run script](./example/sim_server/sim_client/core/multi/run)
