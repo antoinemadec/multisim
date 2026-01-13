@@ -1,4 +1,5 @@
 #include "multisim_server.h"
+#include "multisim_common.h"
 #include "socket_server/server.h"
 
 #include <cassert>
@@ -20,7 +21,7 @@ int multisim_server_start(char const *server_name) {
   sockets[server_idx] = -1;
   server_name_to_idx[server_name] = server_idx;
   server_idx++;
-  return 0;
+  return MULTISIM_SUCCESS;
 }
 
 int multisim_server_pull(char const *server_name, data_handle_t data_handle, int data_width) {
@@ -37,7 +38,7 @@ int multisim_server_pull(char const *server_name, data_handle_t data_handle, int
   if (sockets[idx] < 0) {
     sockets[idx] = server[idx]->acceptNewSocket();
     if (sockets[idx] < 0) {
-      return 0;
+      return MULTISIM_FAIL;
     }
   }
 
@@ -48,13 +49,13 @@ int multisim_server_pull(char const *server_name, data_handle_t data_handle, int
     if (r == 0) {
       sockets[idx] = -1;
     }
-    return 0;
+    return MULTISIM_FAIL;
   }
 
   for (int i = 0; i < buf_32b_size; i++) {
     data[i] = read_buf[i];
   }
-  return 1;
+  return MULTISIM_SUCCESS;
 }
 
 // #define SIMULATE_SEND_FAIL_SERVER
@@ -75,7 +76,7 @@ int multisim_server_push(char const *server_name, const data_handle_t data_handl
   if (sockets[idx] < 0 || r == 0) {
     sockets[idx] = server[idx]->acceptNewSocket();
     if (sockets[idx] < 0) {
-      return 0;
+      return MULTISIM_FAIL;
     }
   }
 
@@ -88,13 +89,13 @@ int multisim_server_push(char const *server_name, const data_handle_t data_handl
   cnt++;
   if (cnt % 1000 == 0) {
     printf("multisim_server_push: simulate send fail\n");
-    return 0;
+    return MULTISIM_FAIL;
   }
 #endif
 
   r = send(sockets[idx], send_buf, sizeof(send_buf), 0);
   if (r <= 0) { // send failed
-    return 0;
+    return MULTISIM_FAIL;
   }
-  return 1;
+  return MULTISIM_SUCCESS;
 }

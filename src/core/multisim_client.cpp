@@ -1,4 +1,5 @@
 #include "multisim_client.h"
+#include "multisim_common.h"
 #include "socket_server/client.h"
 
 #include <cassert>
@@ -74,15 +75,15 @@ int multisim_client_push(char const *server_name, const data_handle_t data_handl
   cnt++;
   if (cnt % 1000 == 0) {
     printf("multisim_client_push: simulate send fail\n");
-    return 0;
+    return MULTISIM_FAIL;
   }
 #endif
 
   r = send(sockets[idx], send_buf, sizeof(send_buf), 0);
   if (r <= 0) { // send failed
-    return 0;
+    return MULTISIM_FAIL;
   }
-  return 1;
+  return MULTISIM_SUCCESS;
 }
 
 int multisim_client_pull(char const *server_name, data_handle_t data_handle, int data_width) {
@@ -98,11 +99,11 @@ int multisim_client_pull(char const *server_name, data_handle_t data_handle, int
 
   r = read(sockets[idx], read_buf, sizeof(read_buf));
   if (r <= 0) {
-    return 0;
+    return MULTISIM_FAIL;
   }
 
   for (int i = 0; i < buf_32b_size; i++) {
     data[i] = read_buf[i];
   }
-  return 1;
+  return MULTISIM_SUCCESS;
 }

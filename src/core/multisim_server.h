@@ -7,18 +7,7 @@
 
 #pragma once
 
-#include <stdint.h>
-#if !defined(MULTISIM_SW)
-#include <svdpi.h>
-#endif
-
-#if defined(MULTISIM_EMULATION) || defined(MULTISIM_SW)
-typedef uint32_t *data_handle_t;
-#else
-typedef svOpenArrayHandle data_handle_t;
-#endif
-
-#define MULTISIM_SERVER_MAX 1024
+#include "multisim_common.h"
 
 // start server
 extern "C" int multisim_server_start(char const *server_name);
