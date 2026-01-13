@@ -23,7 +23,7 @@ compile_veloce() {
   vellib $lib_dir/$rtl_sv_lib
 
   banner "veloce: analyze sv"
-  velanalyze -sv -mfcu -work $rtl_sv_lib $MULTISIM_SRC/core/multisim_server_*.sv +define+EMULATION
+  velanalyze -sv -mfcu -work $rtl_sv_lib $MULTISIM_SRC/core/multisim_server_*.sv +define+MULTISIM_EMULATION
   velanalyze -sv -mfcu -work $rtl_sv_lib $emulation_dir/src/*.sv
 
   banner "veloce: compilation"

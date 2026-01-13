@@ -12,7 +12,7 @@
 #include <svdpi.h>
 #endif
 
-#if defined(EMULATION) || defined(MULTISIM_SW)
+#if defined(MULTISIM_EMULATION) || defined(MULTISIM_SW)
 typedef uint32_t *data_handle_t;
 #else
 typedef svOpenArrayHandle data_handle_t;

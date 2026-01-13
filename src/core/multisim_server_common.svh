@@ -8,7 +8,7 @@ import "DPI-C" function void multisim_server_start(string server_name);
 
 import "DPI-C" function int multisim_server_pull(
   input string server_name,
-`ifdef EMULATION
+`ifdef MULTISIM_EMULATION
   output bit [31:0] data[PullData32bWidth],
 `else
   output bit [31:0] data[],
@@ -18,7 +18,7 @@ import "DPI-C" function int multisim_server_pull(
 
 import "DPI-C" function int multisim_server_push(
   input string server_name,
-`ifdef EMULATION
+`ifdef MULTISIM_EMULATION
   input bit [31:0] data[PushData32bWidth],
 `else
   input bit [31:0] data[],
@@ -56,7 +56,7 @@ endfunction
 // end of simulation
 //-----------------------------------------------------------
 // TODO: can it work in emulation?
-`ifndef EMULATION
+`ifndef MULTISIM_EMULATION
 final begin
   string server_exit_file = "multisim/server_exit";
   int fp;

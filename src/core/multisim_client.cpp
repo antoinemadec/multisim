@@ -59,7 +59,7 @@ int multisim_client_push(char const *server_name, const data_handle_t data_handl
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t send_buf[buf_32b_size];
   int idx = server_name_to_idx[server_name];
-#if defined(EMULATION) || defined(MULTISIM_SW)
+#if defined(MULTISIM_EMULATION) || defined(MULTISIM_SW)
   uint32_t *data = data_handle;
 #else
   svBitVecVal *data = (svBitVecVal *)svGetArrayPtr(data_handle);
@@ -90,7 +90,7 @@ int multisim_client_pull(char const *server_name, data_handle_t data_handle, int
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t read_buf[buf_32b_size];
   int idx = server_name_to_idx[server_name];
-#if defined(EMULATION) || defined(MULTISIM_SW)
+#if defined(MULTISIM_EMULATION) || defined(MULTISIM_SW)
   uint32_t *data = data_handle;
 #else
   svBitVecVal *data = (svBitVecVal *)svGetArrayPtr(data_handle);
