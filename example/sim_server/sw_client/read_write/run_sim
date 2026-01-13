@@ -36,7 +36,7 @@ cd output_sim
 
 banner "C: compile client"
 g++ -o run_sw_test                            \
-  -DSW                                        \
+  -DMULTISIM_SW                                        \
   -I${MULTISIM_SRC}/core                      \
   $MULTISIM_SRC/core/multisim_client.cpp      \
   $MULTISIM_SRC/core/socket_server/client.cpp \
