@@ -77,7 +77,7 @@ initial begin
         @(posedge clk);
       end
       // can be checked ~2M times/sec on Verilator
-      fp = $fopen({SERVER_RUNTIME_DIRECTORY, "/multisim/server_exit"}, "r");
+      fp = $fopen({SERVER_RUNTIME_DIRECTORY, "/.multisim/server_exit"}, "r");
       if (fp != 0) begin
         $fclose(fp);
         $display("multisim_client: end of simulation");
