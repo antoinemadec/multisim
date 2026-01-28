@@ -1,14 +1,13 @@
 module multisim_client_push #(
     parameter int DATA_WIDTH = 64,
-    // do not touch
-    parameter type multisim_data_t = `ifdef MULTISIM_SIMULATION_4_STATE logic `else bit `endif
+    parameter bit DATA_IS_4STATE = 0  // set to 1 to use 4-state data
 ) (
     input bit clk,
     input string server_runtime_directory,
     input string server_name,
     output bit data_rdy,
     input bit data_vld,
-    input multisim_data_t [DATA_WIDTH-1:0] data
+    input logic [DATA_WIDTH-1:0] data
 );
 
   localparam PULL_DATA_WIDTH = DATA_WIDTH;
@@ -26,7 +25,7 @@ module multisim_client_push #(
     data_rdy = 1;
   end
 
-  multisim_data_t [DATA_WIDTH-1:0] data_q;
+  logic [DATA_WIDTH-1:0] data_q;
 
   always @(posedge clk) begin
     if (data_vld && data_rdy) begin

@@ -1,17 +1,16 @@
 module multisim_server_pull #(
     parameter int DATA_WIDTH = 64,
+    parameter bit DATA_IS_4STATE = 0,  // set to 1 to use 4-state data
     // in emulation, calling DPI at every cycle impacts performance,
     // adding delays in between calls improves that a lot
     parameter int DPI_DELAY_CYCLES_INACTIVE = `ifdef MULTISIM_EMULATION 1000 `else 0 `endif,
-    parameter int DPI_DELAY_CYCLES_ACTIVE = 0,
-    // do not touch
-    parameter type multisim_data_t = `ifdef MULTISIM_SIMULATION_4_STATE logic `else bit `endif
+    parameter int DPI_DELAY_CYCLES_ACTIVE = 0
 ) (
     input bit clk,
     input string server_name,
     input bit data_rdy,
     output bit data_vld,
-    output multisim_data_t [DATA_WIDTH-1:0] data
+    output logic [DATA_WIDTH-1:0] data
 );
 
   localparam PULL_DATA_WIDTH = DATA_WIDTH;
@@ -30,7 +29,7 @@ module multisim_server_pull #(
 
   int dpi_delay;
   always @(posedge clk) begin
-    multisim_data_t [DATA_WIDTH-1:0] data_dpi;
+    logic [DATA_WIDTH-1:0] data_dpi;
     if (server_has_started && (!data_vld || data_rdy)) begin
       int data_vld_dpi;
       repeat (dpi_delay) begin

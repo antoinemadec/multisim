@@ -10,24 +10,23 @@
 module multisim_server_pull_then_push #(
     parameter int PULL_DATA_WIDTH = 64,
     parameter int PUSH_DATA_WIDTH = 64,
+    parameter bit DATA_IS_4STATE = 0,  // set to 1 to use 4-state data
     // in emulation, calling DPI at every cycle impacts performance,
     // adding delays in between calls improves that a lot
     parameter int DPI_DELAY_CYCLES_INACTIVE = 1000,
-    parameter int DPI_DELAY_CYCLES_ACTIVE = 10,
-    // do not touch
-    parameter type multisim_data_t = `ifdef MULTISIM_SIMULATION_4_STATE logic `else bit `endif
+    parameter int DPI_DELAY_CYCLES_ACTIVE = 10
 ) (
     input bit clk,
     // pull
     input string pull_server_name,
     input bit pull_data_rdy,
     output bit pull_data_vld,
-    output multisim_data_t [PULL_DATA_WIDTH-1:0] pull_data,
+    output logic [PULL_DATA_WIDTH-1:0] pull_data,
     // push
     input string push_server_name,
     output bit push_data_rdy,
     input bit push_data_vld,
-    input multisim_data_t [PUSH_DATA_WIDTH-1:0] push_data
+    input logic [PUSH_DATA_WIDTH-1:0] push_data
 );
 
   `include "multisim_server_common.svh"
@@ -59,7 +58,7 @@ module multisim_server_pull_then_push #(
 
   int dpi_delay;
   always @(posedge clk) begin
-    multisim_data_t [PULL_DATA_WIDTH-1:0] pull_data_dpi;
+    logic [PULL_DATA_WIDTH-1:0] pull_data_dpi;
     if (server_has_started && (!pull_data_vld || pull_data_rdy)) begin
       // pull
       int pull_data_vld_dpi;
@@ -67,10 +66,13 @@ module multisim_server_pull_then_push #(
         pull_data_vld <= 0;
         @(posedge clk);
       end
-      pull_data_vld_dpi = multisim_server_pull_packed(pull_server_name, pull_data_dpi, PULL_DATA_WIDTH);
+      pull_data_vld_dpi =
+          multisim_server_pull_packed(pull_server_name, pull_data_dpi, PULL_DATA_WIDTH);
       pull_data_vld <= pull_data_vld_dpi[0];
       pull_data <= pull_data_dpi;
-      dpi_delay <= pull_data_vld_dpi[0] ? DPI_DELAY_CYCLES_ACTIVE : get_inactive_dpi_delay(dpi_delay);
+      dpi_delay <= pull_data_vld_dpi[0] ? DPI_DELAY_CYCLES_ACTIVE : get_inactive_dpi_delay(
+          dpi_delay
+      );
 
       // DEBUG: performance
       // if (pull_data_vld_dpi[0] && dpi_delay != DPI_DELAY_CYCLES_INACTIVE) begin
@@ -87,7 +89,8 @@ module multisim_server_pull_then_push #(
         while (!push_data_vld) begin
           @(posedge clk);
         end
-        push_data_accepted = multisim_server_push_packed(push_server_name, push_data, PUSH_DATA_WIDTH);
+        push_data_accepted =
+            multisim_server_push_packed(push_server_name, push_data, PUSH_DATA_WIDTH);
         if (!push_data_accepted[0]) begin
           $display("WARNING: push_data wasn't accepted in %m");
         end

@@ -25,7 +25,7 @@ void multisim_client_start(char const *server_runtime_directory, char const *ser
   sockets[server_idx] = client->getSocket();
   server_name_to_idx[server_name] = server_idx;
 
-#if defined(MULTISIM_SW)
+#if defined(MULTISIM_BLOCKING_SOCKET)
   // make socket blocking
   int flags;
   flags = fcntl(sockets[server_idx], F_GETFD, 0);
@@ -55,30 +55,32 @@ void multisim_client_start(char const *server_runtime_directory, char const *ser
 }
 
 // #define SIMULATE_SEND_FAIL_CLIENT
-int multisim_client_push(char const *server_name, const data_handle_t data_handle, int data_width) {
+static inline int multisim_client_push_core(char const *server_name,
+                                            const data_handle_t data_handle, int data_width,
+                                            bool is_4state) {
   int r;
   int buf_32b_size = (data_width + 31) / 32;
-#if defined(MULTISIM_SIMULATION_4_STATE)
-  uint32_t send_buf[2*buf_32b_size];
-#else
-  uint32_t send_buf[buf_32b_size];
-#endif
+  uint32_t send_buf[is_4state ? 2 * buf_32b_size : buf_32b_size];
   int idx = server_name_to_idx[server_name];
-#if defined(MULTISIM_EMULATION) || defined(MULTISIM_SW)
-  uint32_t *data = data_handle;
-#elif defined(MULTISIM_SIMULATION_4_STATE)
-  svLogicVecVal *data = (svLogicVecVal *)svGetArrayPtr(data_handle);
-#else
+#if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
   svBitVecVal *data = (svBitVecVal *)svGetArrayPtr(data_handle);
+  svLogicVecVal *data_4state = (svLogicVecVal *)svGetArrayPtr(data_handle);
+#else
+  uint32_t *data = data_handle;
 #endif
 
   for (int i = 0; i < buf_32b_size; i++) {
-#if defined(MULTISIM_SIMULATION_4_STATE)
-    send_buf[i] = data[i].aval;
-    send_buf[buf_32b_size + i] = data[i].bval;
+    if (is_4state) {
+#if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
+      send_buf[i] = data_4state[i].aval;
+      send_buf[buf_32b_size + i] = data_4state[i].bval;
 #else
-    send_buf[i] = data[i];
+      send_buf[i] = data[i];
+      send_buf[buf_32b_size + i] = data[buf_32b_size + i];
 #endif
+    } else {
+      send_buf[i] = data[i];
+    }
   }
 
 #ifdef SIMULATE_SEND_FAIL_CLIENT
@@ -97,21 +99,17 @@ int multisim_client_push(char const *server_name, const data_handle_t data_handl
   return MULTISIM_SUCCESS;
 }
 
-int multisim_client_pull(char const *server_name, data_handle_t data_handle, int data_width) {
+static inline int multisim_client_pull_core(char const *server_name, data_handle_t data_handle,
+                                            int data_width, bool is_4state) {
   int r;
   int buf_32b_size = (data_width + 31) / 32;
-#if defined(MULTISIM_SIMULATION_4_STATE)
-  uint32_t read_buf[2*buf_32b_size];
-#else
-  uint32_t read_buf[buf_32b_size];
-#endif
+  uint32_t read_buf[is_4state ? 2 * buf_32b_size : buf_32b_size];
   int idx = server_name_to_idx[server_name];
-#if defined(MULTISIM_EMULATION) || defined(MULTISIM_SW)
-  uint32_t *data = data_handle;
-#elif defined(MULTISIM_SIMULATION_4_STATE)
-  svLogicVecVal *data = (svLogicVecVal *)svGetArrayPtr(data_handle);
-#else
+#if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
   svBitVecVal *data = (svBitVecVal *)svGetArrayPtr(data_handle);
+  svLogicVecVal *data_4state = (svLogicVecVal *)svGetArrayPtr(data_handle);
+#else
+  uint32_t *data = data_handle;
 #endif
 
   r = read(sockets[idx], read_buf, sizeof(read_buf));
@@ -120,12 +118,41 @@ int multisim_client_pull(char const *server_name, data_handle_t data_handle, int
   }
 
   for (int i = 0; i < buf_32b_size; i++) {
-#if defined(MULTISIM_SIMULATION_4_STATE)
-    data[i].aval = read_buf[i];
-    data[i].bval = read_buf[buf_32b_size + i];
+    if (is_4state) {
+#if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
+      data_4state[i].aval = read_buf[i];
+      data_4state[i].bval = read_buf[buf_32b_size + i];
 #else
-    data[i] = read_buf[i];
+      data[i] = read_buf[i];
+      data[buf_32b_size + i] = read_buf[buf_32b_size + i];
 #endif
+    } else {
+      data[i] = read_buf[i];
+    }
   }
   return MULTISIM_SUCCESS;
+}
+
+int multisim_client_push(char const *server_name, const data_handle_t data_handle, int data_width) {
+  return multisim_client_push_core(server_name, data_handle, data_width, false);
+}
+
+int multisim_client_pull(char const *server_name, data_handle_t data_handle, int data_width) {
+  return multisim_client_pull_core(server_name, data_handle, data_width, false);
+}
+
+int multisim_client_push_4state(char const *server_name, const data_handle_t data_handle,
+                                int data_width) {
+#if defined(MULTISIM_4STATE_UNSUPPORTED)
+  assert(false);
+#endif
+  return multisim_client_push_core(server_name, data_handle, data_width, true);
+}
+
+int multisim_client_pull_4state(char const *server_name, data_handle_t data_handle,
+                                int data_width) {
+#if defined(MULTISIM_4STATE_UNSUPPORTED)
+  assert(false);
+#endif
+  return multisim_client_pull_core(server_name, data_handle, data_width, true);
 }
