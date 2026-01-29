@@ -53,11 +53,14 @@ module cpu_multisim_client ();
   );
 
   multisim_client_axi_push #(
+`ifdef MULTISIM_4STATE
+      .DATA_IS_4STATE(1),
+`endif
       .axi_aw_t(axi_aw_t),
-      .axi_w_t (axi_w_t),
-      .axi_b_t (axi_b_t),
+      .axi_w_t(axi_w_t),
+      .axi_b_t(axi_b_t),
       .axi_ar_t(axi_ar_t),
-      .axi_r_t (axi_r_t)
+      .axi_r_t(axi_r_t)
   ) i_multisim_client_axi_push (
       .clk                     (clk),
       .rst_n                   (1),

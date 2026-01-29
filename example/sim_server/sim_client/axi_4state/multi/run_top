@@ -10,14 +10,13 @@ cp -rfL src/* output_top
 cd output_top
 
 g++ -o libdpi.so -g -shared -fPIC             \
-  -DMULTISIM_SIMULATION_4_STATE               \
   -I${QUESTASIM_HOME}/include                 \
   $MULTISIM_SRC/core/multisim_server.cpp      \
   $MULTISIM_SRC/core/socket_server/server.cpp
 
 qrun -64                                        \
   +define+MULTISIM                              \
-  +define+MULTISIM_SIMULATION_4_STATE           \
+  +define+MULTISIM_4STATE                       \
   top.sv memory.sv cpu_multisim_server.sv       \
   +incdir+$MULTISIM_SRC/core                    \
   $MULTISIM_SRC/core/multisim_server_push.sv    \

@@ -92,7 +92,7 @@ module cpu
   endtask
 
   task static axi_write(input bit [AXI_ADDR_WIDTH-1:0] address,
-                        input bit [AXI_DATA_WIDTH-1:0] wdata,
+                        input logic [AXI_DATA_WIDTH-1:0] wdata,
                         input bit [31:0] aw_w_wait_cycles = 0);
     // AW
     o_axi_m_aw.id    <= cpu_index[AXI_ID_WIDTH-1:0];
@@ -155,7 +155,7 @@ module cpu
       wait_n_cycles(int'(cmd_wait_cycles));  // 0 to 7 cycles extra delay
 
       if (rwb) begin
-        bit [63:0] rdata;
+        logic [63:0] rdata;
         axi_read(address, rdata);
         $display("[cpu_%0d] CPU 0x%016x <- [0x%016x] (%0d/%0d)", cpu_index, rdata, address,
                  read_transaction_nb, TRANSACTION_NB);
