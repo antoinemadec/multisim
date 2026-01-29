@@ -51,7 +51,7 @@ Tested platform combinations:
   * [quasi static signals](./src/quasi_static/) (useful for signals without control signals like IRQ)
 
 ## available platforms
-* SIMULATION (default)
+* SIMULATION
     * tested with **Verilator 5.040**
     * tested with **QuestaSim 2024.3**
 * EMULATION
@@ -76,7 +76,7 @@ Look at those files to have more info about those platforms:
 ## 4-state support
 By default, `multisim` uses 2-state logic (0 and 1).
 
-However 4-state logic can be used by using the parameter `DATA_IS_4STATE`.  
+However 4-state logic (0, 1, X and Z) can be used by using the parameter `DATA_IS_4STATE`.  
 See the [axi_4state example](./example/sim_server/sim_client/axi_4state/multi)
 
 4-state logic:
