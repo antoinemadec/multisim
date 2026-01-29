@@ -2,7 +2,8 @@
 
 module multisim_server_apb_pull #(
     parameter type apb_req_t,
-    parameter type apb_resp_t
+    parameter type apb_resp_t,
+    parameter bit  DATA_IS_4STATE = 0  // set to 1 to use 4-state data
 ) (
     input bit clk,
     input bit rst_n,
@@ -64,7 +65,8 @@ module multisim_server_apb_pull #(
 
   // request
   multisim_server_pull #(
-      .DATA_WIDTH($bits(apb_req_t))
+      .DATA_WIDTH($bits(apb_req_t)),
+      .DATA_IS_4STATE(DATA_IS_4STATE)
   ) i_multisim_server_pull_apb_req (
       .clk        (clk_gated),
       .server_name(server_name_apb_req),
@@ -75,7 +77,8 @@ module multisim_server_apb_pull #(
 
   // response
   multisim_server_push #(
-      .DATA_WIDTH($bits(apb_resp_t))
+      .DATA_WIDTH($bits(apb_resp_t)),
+      .DATA_IS_4STATE(DATA_IS_4STATE)
   ) i_multisim_server_push_apb_resp (
       .clk        (clk_gated),
       .server_name(server_name_apb_resp),

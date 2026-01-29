@@ -3,7 +3,8 @@ module multisim_client_axi_pull #(
     parameter type axi_w_t,
     parameter type axi_b_t,
     parameter type axi_ar_t,
-    parameter type axi_r_t
+    parameter type axi_r_t,
+    parameter bit  DATA_IS_4STATE = 0  // set to 1 to use 4-state data
 ) (
     input bit clk,
     input bit rst_n,
@@ -56,7 +57,8 @@ module multisim_client_axi_pull #(
 
   // AW
   multisim_client_pull #(
-      .DATA_WIDTH($bits(axi_aw_t))
+      .DATA_WIDTH($bits(axi_aw_t)),
+      .DATA_IS_4STATE(DATA_IS_4STATE)
   ) i_multisim_client_pull_axi_aw (
       .clk                     (clk_gated),
       .server_runtime_directory(server_runtime_directory),
@@ -68,7 +70,8 @@ module multisim_client_axi_pull #(
 
   // W
   multisim_client_pull #(
-      .DATA_WIDTH($bits(axi_w_t))
+      .DATA_WIDTH($bits(axi_w_t)),
+      .DATA_IS_4STATE(DATA_IS_4STATE)
   ) i_multisim_client_pull_axi_w (
       .clk                     (clk_gated),
       .server_runtime_directory(server_runtime_directory),
@@ -80,7 +83,8 @@ module multisim_client_axi_pull #(
 
   // B
   multisim_client_push #(
-      .DATA_WIDTH($bits(axi_b_t))
+      .DATA_WIDTH($bits(axi_b_t)),
+      .DATA_IS_4STATE(DATA_IS_4STATE)
   ) i_multisim_client_push_axi_b (
       .clk                     (clk_gated),
       .server_runtime_directory(server_runtime_directory),
@@ -92,7 +96,8 @@ module multisim_client_axi_pull #(
 
   // AR
   multisim_client_pull #(
-      .DATA_WIDTH($bits(axi_ar_t))
+      .DATA_WIDTH($bits(axi_ar_t)),
+      .DATA_IS_4STATE(DATA_IS_4STATE)
   ) i_multisim_client_pull_axi_ar (
       .clk                     (clk_gated),
       .server_runtime_directory(server_runtime_directory),
@@ -104,7 +109,8 @@ module multisim_client_axi_pull #(
 
   // R
   multisim_client_push #(
-      .DATA_WIDTH($bits(axi_r_t))
+      .DATA_WIDTH($bits(axi_r_t)),
+      .DATA_IS_4STATE(DATA_IS_4STATE)
   ) i_multisim_client_push_axi_r (
       .clk                     (clk_gated),
       .server_runtime_directory(server_runtime_directory),
