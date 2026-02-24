@@ -7,7 +7,7 @@ module cpu
   import axi_pkg::*;
 #(
     parameter int TRANSACTION_NB = 1000,
-    parameter int COMPUTATION_COMPLEXITY = 20
+    parameter int COMPUTATION_COMPLEXITY = 2
 ) (
     input bit clk,
     input bit [31:0] cpu_index,
@@ -138,7 +138,7 @@ module cpu
 
   bit [63:0] x;
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     o_axi_m_awvalid <= 0;
     o_axi_m_wvalid  <= 0;
     o_axi_m_bready  <= 0;

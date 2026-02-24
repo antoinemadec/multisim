@@ -7,12 +7,10 @@
 #include <string>
 #include <unistd.h>
 
-using namespace std;
-
 Server *server[MULTISIM_SERVER_MAX];
 int sockets[MULTISIM_SERVER_MAX];
 int server_idx = 0;
-map<string, int> server_name_to_idx;
+std::map<std::string, int> server_name_to_idx;
 
 int multisim_server_start(char const *server_name) {
   assert(server_idx < MULTISIM_SERVER_MAX);

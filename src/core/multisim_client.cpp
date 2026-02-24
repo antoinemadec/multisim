@@ -8,15 +8,13 @@
 #include <string>
 #include <unistd.h>
 
-using namespace std;
-
 int sockets[MULTISIM_SERVER_MAX];
 int server_idx = 0;
-map<string, int> server_name_to_idx;
+std::map<std::string, int> server_name_to_idx;
 
 void multisim_client_start(char const *server_runtime_directory, char const *server_name) {
   Client *client;
-  string server_info_dir = string(server_runtime_directory) + "/.multisim";
+  std::string server_info_dir = std::string(server_runtime_directory) + "/.multisim";
 
   assert(server_idx < MULTISIM_SERVER_MAX);
 
@@ -34,8 +32,8 @@ void multisim_client_start(char const *server_runtime_directory, char const *ser
 #endif
 
   // dump info
-  string first_server_name = server_name_to_idx.begin()->first;
-  string client_info_file = server_info_dir + "/client_" + first_server_name + ".txt";
+  std::string first_server_name = server_name_to_idx.begin()->first;
+  std::string client_info_file = server_info_dir + "/client_" + first_server_name + ".txt";
   FILE *fp;
   if (server_idx == 0) {
     fp = fopen(client_info_file.c_str(), "w");
