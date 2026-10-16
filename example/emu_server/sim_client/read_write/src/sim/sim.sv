@@ -92,6 +92,8 @@ module sim;
   always @(posedge clk) begin
     if (exit) begin
       $display("exit");
+      // exit_ack is already high: leave one cycle to multisim_client_push to send exit
+      @(posedge clk);
       while (!exit_ack) begin
         @(posedge clk);
       end
