@@ -1,3 +1,5 @@
+`include "multisim_common.svh"
+
 // This module waits DPI_DELAY_CYCLES in between a server(pull, push) sequence only.
 // It enables better throughput when client sends read commands for instance.
 //
@@ -18,18 +20,20 @@ module multisim_server_pull_then_push #(
 ) (
     input bit clk,
     // pull
-    input string pull_server_name,
+    input `MULTISIM_SERVER_NAME_T pull_server_name,
     input bit pull_data_rdy,
     output bit pull_data_vld,
     output logic [PULL_DATA_WIDTH-1:0] pull_data,
     // push
-    input string push_server_name,
+    input `MULTISIM_SERVER_NAME_T push_server_name,
     output bit push_data_rdy,
     input bit push_data_vld,
     input logic [PUSH_DATA_WIDTH-1:0] push_data
 );
 
   `include "multisim_server_common.svh"
+  `MULTISIM_SERVER_PULL_DPI(pull_server_name)
+  `MULTISIM_SERVER_PUSH_DPI(push_server_name)
 
   bit server_has_started = 0;
   initial begin
@@ -41,7 +45,6 @@ module multisim_server_pull_then_push #(
     multisim_server_start(pull_server_name);
     multisim_server_start(push_server_name);
     server_has_started = 1;
-    push_data_rdy = 0;
   end
 
   // gradually go back from active to inactive delay,
@@ -66,8 +69,7 @@ module multisim_server_pull_then_push #(
         pull_data_vld <= 0;
         @(posedge clk);
       end
-      pull_data_vld_dpi =
-          multisim_server_pull_packed(pull_server_name, pull_data_dpi, PULL_DATA_WIDTH);
+      `MULTISIM_SERVER_PULL(pull_data_vld_dpi, pull_server_name, pull_data_dpi, PULL_DATA_WIDTH);
       pull_data_vld <= pull_data_vld_dpi[0];
       pull_data <= pull_data_dpi;
       dpi_delay <= pull_data_vld_dpi[0] ? DPI_DELAY_CYCLES_ACTIVE : get_inactive_dpi_delay(
@@ -89,12 +91,11 @@ module multisim_server_pull_then_push #(
         while (!push_data_vld) begin
           @(posedge clk);
         end
-        push_data_accepted =
-            multisim_server_push_packed(push_server_name, push_data, PUSH_DATA_WIDTH);
+        push_data_rdy <= 0;  // the call can take cycles (ZEBU)
+        `MULTISIM_SERVER_PUSH(push_data_accepted, push_server_name, push_data, PUSH_DATA_WIDTH);
         if (!push_data_accepted[0]) begin
           $display("WARNING: push_data wasn't accepted in %m");
         end
-        push_data_rdy <= 0;
       end
     end
   end

@@ -6,6 +6,33 @@
 localparam int PullData32bWidth = (PULL_DATA_WIDTH + 31) / 32;
 localparam int PushData32bWidth = (PUSH_DATA_WIDTH + 31) / 32;
 
+`ifdef MULTISIM_ZEBU
+// see MULTISIM_ZEBU in multisim_common.svh and multisim_server.cpp,
+// the data output of pull/push is {call_count[30:0], ret} on top of the data
+localparam int PullStatusWidth = PullData32bWidth * 32 + 32;
+localparam int PushStatusWidth = 32;
+
+import "DPI-C" multisim_server_start_zebu = function void multisim_server_start(
+  input `MULTISIM_SERVER_NAME_T server_name
+);
+
+(* zemi3_delayed_dpi *)
+import "DPI-C" function void multisim_server_pull_zebu(
+  output bit [PullStatusWidth-1:0] status_data,
+  output bit done,
+  input `MULTISIM_SERVER_NAME_T server_name,
+  input int data_width
+);
+
+(* zemi3_delayed_dpi *)
+import "DPI-C" function void multisim_server_push_zebu(
+  output bit [PushStatusWidth-1:0] status,
+  output bit done,
+  input `MULTISIM_SERVER_NAME_T server_name,
+  input bit [PushData32bWidth*32-1:0] data,
+  input int data_width
+);
+`else
 import "DPI-C" function void multisim_server_start(string server_name);
 
 import "DPI-C" function int multisim_server_pull(
@@ -89,3 +116,4 @@ function automatic int multisim_server_push_packed(
   end
   return ret;
 endfunction
+`endif
