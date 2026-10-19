@@ -84,10 +84,16 @@ int Client::getServerIpAndPort(char const *server_file) {
   if (fp == NULL) {
     return 0;
   }
-  fscanf(fp, "%s %s", &garbage[0], &ip_str[0]); // read "ip: xxx.xxx.xxx.xxx"
+  int port;
+  // read "ip: xxx.xxx.xxx.xxx" and "port: xxxxx", the server can still be writing the file
+  if (fscanf(fp, "%127s %127s", &garbage[0], &ip_str[0]) != 2 ||
+      fscanf(fp, "%127s %d", &garbage[0], &port) != 2) {
+    fclose(fp);
+    return 0;
+  }
   serverIp = (char *)malloc(128);
   strcpy((char *)serverIp, &ip_str[0]);
-  fscanf(fp, "%s %d", &garbage[0], &serverPort); // read "port: xxxxx"
+  serverPort = port;
   fclose(fp);
   return 1;
 }
