@@ -8,12 +8,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #define BASE_PORT 8100
-#define SERVERNAME_MAX_SIZE 200
 
 /**
  * Implementation of a non-blocking socket server
@@ -39,6 +39,6 @@ private:
   int addrlen = sizeof(address);
   bool serverIsRunning = false;
   char const *getIp();
-  static std::set<char const *> serverNameSet;
+  static std::set<std::string> serverNameSet;
 };
 #endif

@@ -1,17 +1,15 @@
 #include "server.h"
 #include <string>
 
-std::set<char const *> Server::serverNameSet;
+std::set<std::string> Server::serverNameSet;
 
 Server::Server(char const *server_info_dir, char const *name)
     : serverInfoDir(server_info_dir), serverName(name) {
-  char *name_copy = new char[SERVERNAME_MAX_SIZE];
-  strcpy(name_copy, name);
-  if (Server::serverNameSet.find(name_copy) != Server::serverNameSet.end()) {
-    fprintf(stderr, "ERROR: server name [%s] already exist, use another name\n", name_copy);
+  if (Server::serverNameSet.find(name) != Server::serverNameSet.end()) {
+    fprintf(stderr, "ERROR: server name [%s] already exist, use another name\n", name);
     exit(EXIT_FAILURE);
   }
-  Server::serverNameSet.insert(name_copy);
+  Server::serverNameSet.insert(name);
 }
 
 void Server::start() {
