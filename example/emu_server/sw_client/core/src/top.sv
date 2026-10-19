@@ -35,13 +35,14 @@ module top;
   //-----------------------------------------------------------
   bit [63:0] rx64_data;
   bit rx64_data_vld;
+  bit tx64_data_rdy;
 
   multisim_server_pull #(
       .DATA_WIDTH(64)
   ) i_multisim_server_pull64 (
       .clk        (clk),
       .server_name("rx64"),
-      .data_rdy   (1),
+      .data_rdy   (tx64_data_rdy),
       .data_vld   (rx64_data_vld),
       .data       (rx64_data)
   );
@@ -51,7 +52,7 @@ module top;
   ) i_multisim_server_push64 (
       .clk        (clk),
       .server_name("tx64"),
-      .data_rdy   (/*unused*/),
+      .data_rdy   (tx64_data_rdy),
       .data_vld   (rx64_data_vld),
       .data       (rx64_data)
   );

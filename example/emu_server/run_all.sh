@@ -2,18 +2,22 @@
 
 set -e
 
+# arguments are passed to the compile scripts, e.g. "-e zebu"
+compile_args="$@"
+
 SCRIPT_DIR=$(readlink -f $0)
 
 run_script () (
   script="$1"
   log="$2"
+  shift 2
   cd $(dirname $script)
-  ./$(basename $script) &> $log
+  ./$(basename $script) "$@" &> $log
 )
 
 for compile_script in $(find -L -type f -name compile); do
   echo "Compiling $compile_script..."
-  run_script $compile_script "compile.log" &
+  run_script $compile_script "compile.log" $compile_args &
 done
 wait
 echo "compilations finished!"

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# ZeBu compilation of an emu_server example in the current directory
+# usage: compile_zebu SV_FILE...
+#   SV_FILE: sources of the "top" module, compiled with the multisim server modules
+
+set -e
+
+zebu_dir="$(readlink -e $(dirname $0))"
+
+cp $zebu_dir/project.utf .
+cp $zebu_dir/run.tcl run_zebu.tcl
+
+# multisim server modules of the design, they are ZEMI3 transactors (project.utf)
+servers=$(grep -ohE "\bmultisim_server_(pull_then_push|pull|push)\b" "$@" | sort -u | tr '\n' ' ')
+echo "set multisim_servers {$servers}" > multisim_servers.utf
+
+cat > vcs_cmd.sh << EOF
+#!/usr/bin/env bash
+vcs -full64 -sverilog -timescale=1ns/1ps  \\
+  +define+MULTISIM_ZEBU                   \\
+  +incdir+$MULTISIM_SRC/core              \\
+  $MULTISIM_SRC/core/multisim_server_*.sv \\
+  $@                                      \\
+  -top top
+EOF
+chmod +x vcs_cmd.sh
+
+zCui --nogui --compile --unifiedCompileProject project.utf
+
+# runtime libraries of ccall ($display, $finish) and of the ZEMI3 transactors
+make -C zcui.work/zebu.work -f grp0_ccall.mk clean comp
+make -C zcui.work/zebu.work -f dpixtor.mk clean all

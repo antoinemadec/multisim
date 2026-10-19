@@ -1,0 +1,29 @@
+# vim: set ft=tcl
+# zCui unified compile project of the emu_server examples, see compile_zebu
+
+vcs_exec_command {vcs_cmd.sh}
+
+architecture_file -filename "$env(FILE_CONF)"
+
+# site specific settings (grid_cmd, clock_config, etc), see README.md
+if {[info exists ::env(MULTISIM_ZEBU_SETTINGS)]} {
+  source $::env(MULTISIM_ZEBU_SETTINGS)
+}
+
+design_size -number_of_modules 1
+set_hwtop -module {top}
+
+# clock generated with delays in top
+clock_delay -module {top}
+
+# multisim server modules are ZEMI3 transactors, see MULTISIM_ZEBU in multisim_common.svh
+source multisim_servers.utf
+dpi_synthesis -enable ALL
+xtors -add $multisim_servers -type ZEMI3
+zemi3 -module $multisim_servers -support_dollar_display true
+# do not send the constant arguments (server name, data width) on each call
+zemi3 -optimize_dpi_constant_args true
+
+# system tasks of top go through ccall
+system_tasks -enable -task {$display}
+system_tasks -enable -task {$finish}

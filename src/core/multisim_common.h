@@ -1,9 +1,15 @@
 // There are 3 targets:
 //  - SIMULATION (default): called from SV as DPI
 //  - EMULATION: called from SV as DPI, with fixed size array (open array is not supported)
+//    - ZEBU: EMULATION flavor for ZeBu, the server DPIs are ZEMI3 deferred DPIs
 //  - SW: called directly from software, send/get are blocking
 
 #pragma once
+
+// ZEBU implies EMULATION
+#if defined(MULTISIM_ZEBU) && !defined(MULTISIM_EMULATION)
+#define MULTISIM_EMULATION
+#endif
 
 // default target is SIMULATION
 #if !defined(MULTISIM_EMULATION) && !defined(MULTISIM_SW)
@@ -25,6 +31,17 @@
 #if defined(MULTISIM_EMULATION)
 #define MULTISIM_SV_DPI
 #define MULTISIM_4STATE_UNSUPPORTED
+#endif
+
+// ZEBU
+//  - server modules are ZEMI3 transactors: no string type, the server name is a packed
+//    bit [8*MULTISIM_SERVER_NAME_LEN-1:0] holding the string literal (right-justified)
+//  - DPIs with outputs are ZEMI3 deferred DPIs: the emulator clocks keep running while the
+//    host processes the call
+#if defined(MULTISIM_ZEBU)
+#ifndef MULTISIM_SERVER_NAME_LEN
+#define MULTISIM_SERVER_NAME_LEN 32
+#endif
 #endif
 
 // SW

@@ -156,3 +156,67 @@ int multisim_server_push_4state(char const *server_name, const data_handle_t dat
 #endif
   return multisim_server_push_core(server_name, data_handle, data_width, true);
 }
+
+#if defined(MULTISIM_ZEBU)
+#include <cstring>
+#include <mutex>
+
+// ZeBu: ZEMI3 transactor DPIs, see multisim_server_common.svh
+//  - the server name is a packed string literal (right-justified, no string type in ZEMI3)
+//  - pull/push are deferred DPIs: a single data output and done,
+//    the 32-bit status word is {call_count[30:0], MULTISIM_SUCCESS|MULTISIM_FAIL}
+//  - ZEMI3 calls the DPIs of different transactors from different threads: they are serialized
+static uint32_t zebu_call_cnt[MULTISIM_SERVER_MAX];
+static std::mutex zebu_mutex;
+
+static std::string zebu_server_name(const svBitVecVal *server_name) {
+  std::string name;
+  for (int i = MULTISIM_SERVER_NAME_LEN - 1; i >= 0; i--) {
+    char c = (server_name[i / 4] >> (8 * (i % 4))) & 0xff;
+    if (c != 0) {
+      name += c;
+    }
+  }
+  return name;
+}
+
+// start the server on its first call: ZEMI3 does not order calls from different processes
+static std::string zebu_server_start(const svBitVecVal *server_name) {
+  std::string name = zebu_server_name(server_name);
+  if (server_name_to_idx.find(name) == server_name_to_idx.end()) {
+    // the Server keeps the name pointer
+    multisim_server_start(strdup(name.c_str()));
+  }
+  return name;
+}
+
+static inline uint32_t zebu_status(std::string const &name, int r) {
+  int idx = server_name_to_idx[name];
+  zebu_call_cnt[idx]++;
+  return (zebu_call_cnt[idx] << 1) | (r == MULTISIM_SUCCESS ? 1 : 0);
+}
+
+extern "C" void multisim_server_start_zebu(const svBitVecVal *server_name) {
+  std::lock_guard<std::mutex> lock(zebu_mutex);
+  zebu_server_start(server_name);
+}
+
+extern "C" void multisim_server_pull_zebu(svBitVecVal *status_data, svBit *done,
+                                          const svBitVecVal *server_name, int data_width) {
+  std::lock_guard<std::mutex> lock(zebu_mutex);
+  std::string name = zebu_server_start(server_name);
+  int r = multisim_server_pull_core(name.c_str(), status_data, data_width, false);
+  status_data[(data_width + 31) / 32] = zebu_status(name, r);
+  *done = 1;
+}
+
+extern "C" void multisim_server_push_zebu(svBitVecVal *status, svBit *done,
+                                          const svBitVecVal *server_name, const svBitVecVal *data,
+                                          int data_width) {
+  std::lock_guard<std::mutex> lock(zebu_mutex);
+  std::string name = zebu_server_start(server_name);
+  int r = multisim_server_push_core(name.c_str(), (data_handle_t)data, data_width, false);
+  status[0] = zebu_status(name, r);
+  *done = 1;
+}
+#endif

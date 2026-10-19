@@ -10,12 +10,13 @@ compile_args="$@"
 #--------------------------------------------------------------
 usage() {
   cat << EOF
-usage: $(basename $0) [-h] [-o OUPUT_DIR]
+usage: $(basename $0) [-h] [-e EMULATOR] [-o OUPUT_DIR]
 
 compile an emulation database in OUTPUT_DIR
 
 where:
   -h                        : display this help
+  -e EMULATOR               : veloce (default) or zebu
   -o OUTPUT_DIR             : build in OUTPUT_DIR
 
 EOF
@@ -54,6 +55,14 @@ compile_veloce() {
 
   banner "veloce: compilation"
   velcomp
+
+  dpi_cflags="-DMULTISIM_EMULATION -I${VELOCE_HOME}/tbx/include"
+}
+
+
+compile_zebu() {
+  $emulation_dir/../../zebu/compile_zebu $emulation_dir/src/*.sv
+  dpi_cflags="-DMULTISIM_ZEBU -I${ZEBU_ROOT}/include"
 }
 
 
@@ -61,6 +70,7 @@ compile_veloce() {
 # execution
 #--------------------------------------------------------------
 output_dir="output"
+emulator="veloce"
 
 while [ "$#" -gt 0 ]
 do
@@ -68,6 +78,11 @@ do
     -h)
       usage
       exit 0
+      ;;
+    -e)
+      shift 1
+      emulator=$1
+      shift 1
       ;;
     -o)
       shift 1
@@ -81,6 +96,7 @@ do
   esac
 done
 
+[[ $emulator =~ ^(veloce|zebu)$ ]] || error "unknown emulator: $emulator"
 output_dir=$(readlink -f $output_dir)
 emulation_dir="$(readlink -e $(dirname $0))"
 
@@ -89,14 +105,14 @@ rm -rf $output_dir
 mkdir -p $output_dir
 cd $output_dir
 
-banner "compile_veloce"
-compile_veloce
+banner "compile_$emulator"
+compile_$emulator
 
 banner "copy runtime files"
 cp -rf $emulation_dir/input/runtime/* .
 
 banner "create info.txt"
-(
+[[ $emulator == veloce ]] && (
 grep Frequency veloce.log/compile_* | sed 's/.*Freq/Freq/'
 grep 'Number of Boards' veloce.log/compile_* | sed 's/.*Boards/Boards/'
 ) > info.txt
@@ -104,8 +120,7 @@ grep 'Number of Boards' veloce.log/compile_* | sed 's/.*Boards/Boards/'
 banner "compile C"
 # server: libdpi.so, needed by the emulator at runtime
 g++ -o libdpi.so -g -shared -fPIC             \
-  -DMULTISIM_EMULATION                        \
-  -I${VELOCE_HOME}/tbx/include                \
+  $dpi_cflags                                 \
   $MULTISIM_SRC/core/multisim_server.cpp      \
   $MULTISIM_SRC/core/socket_server/server.cpp
 # client: run_sw_test binary communicating with the server

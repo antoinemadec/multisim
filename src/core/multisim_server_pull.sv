@@ -1,3 +1,5 @@
+`include "multisim_common.svh"
+
 module multisim_server_pull #(
     parameter int DATA_WIDTH = 64,
     parameter bit DATA_IS_4STATE = 0,  // set to 1 to use 4-state data
@@ -7,7 +9,7 @@ module multisim_server_pull #(
     parameter int DPI_DELAY_CYCLES_ACTIVE = 0
 ) (
     input bit clk,
-    input string server_name,
+    input `MULTISIM_SERVER_NAME_T server_name,
     input bit data_rdy,
     output bit data_vld,
     output logic [DATA_WIDTH-1:0] data
@@ -16,6 +18,7 @@ module multisim_server_pull #(
   localparam PULL_DATA_WIDTH = DATA_WIDTH;
   localparam PUSH_DATA_WIDTH = DATA_WIDTH;
   `include "multisim_server_common.svh"
+  `MULTISIM_SERVER_PULL_DPI(server_name)
 
   bit server_has_started = 0;
   initial begin
@@ -36,7 +39,8 @@ module multisim_server_pull #(
         data_vld <= 0;
         @(posedge clk);
       end
-      data_vld_dpi = multisim_server_pull_packed(server_name, data_dpi, DATA_WIDTH);
+      data_vld <= 0;  // the call can take cycles (ZEBU)
+      `MULTISIM_SERVER_PULL(data_vld_dpi, server_name, data_dpi, DATA_WIDTH);
       data_vld <= data_vld_dpi[0];
       data <= data_dpi;
       dpi_delay <= data_vld_dpi[0] ? DPI_DELAY_CYCLES_ACTIVE : DPI_DELAY_CYCLES_INACTIVE;

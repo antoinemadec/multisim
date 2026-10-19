@@ -11,6 +11,8 @@ RUNTIME_DIR="$(readlink -e $(dirname $0))"
 run_emu() {
   export LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH"
   cmd="velrun -c -emul $Emulator -sv_lib libdpi -do run.tcl"
+  # ZeBu database, MULTISIM_ZEBU_LAUNCHER: optional command booking an emulator (README.md)
+  [[ -d zcui.work ]] && cmd="$MULTISIM_ZEBU_LAUNCHER zRci --zebu-work ./zcui.work/zebu.work run_zebu.tcl"
 
   echo $cmd
   $cmd
