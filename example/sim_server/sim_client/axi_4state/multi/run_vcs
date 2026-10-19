@@ -23,6 +23,5 @@ for ((i=0;i<cpu_nb;i++)); do
 done
 
 # 3- start server
-./run_vcs_top $cpu_nb
-
-exit_clean=1
+# the clients are killed if the server fails
+./run_vcs_top $cpu_nb && exit_clean=1
