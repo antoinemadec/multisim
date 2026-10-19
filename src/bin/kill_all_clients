@@ -9,7 +9,9 @@ multisim_dir="$1"
 [ -z "$multisim_dir" ] && multisim_dir=".multisim"
 
 for client_file in "$multisim_dir"/client_*.txt; do
-  pid="$(grep "^pid: " $client_file | awk '{print $2}')"
+  [ -f "$client_file" ] || continue
+  pid="$(grep "^pid: " "$client_file" | awk '{print $2}')"
   [ "$pid" = "" ] && continue
-  kill "$pid"
+  # the client may have already exited
+  kill "$pid" 2>/dev/null || true
 done
