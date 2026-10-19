@@ -17,6 +17,7 @@
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
+#include "socket_io.h"
 
 #define BASE_PORT 8100
 

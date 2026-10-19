@@ -92,7 +92,7 @@ static inline int multisim_client_push_core(char const *server_name,
   }
 #endif
 
-  r = send(sockets[idx], send_buf, sizeof(send_buf), MSG_NOSIGNAL);
+  r = send_msg(sockets[idx], send_buf, sizeof(send_buf));
   if (r <= 0) { // send failed
     return MULTISIM_FAIL;
   }
@@ -112,7 +112,7 @@ static inline int multisim_client_pull_core(char const *server_name, data_handle
   uint32_t *data = data_handle;
 #endif
 
-  r = read(sockets[idx], read_buf, sizeof(read_buf));
+  r = read_msg(sockets[idx], read_buf, sizeof(read_buf));
   if (r <= 0) {
     return MULTISIM_FAIL;
   }

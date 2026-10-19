@@ -48,7 +48,7 @@ static inline int multisim_server_pull_core(char const *server_name, data_handle
     }
   }
 
-  r = read(sockets[idx], read_buf, sizeof(read_buf));
+  r = read_msg(sockets[idx], read_buf, sizeof(read_buf));
   if (r <= 0) {
     // -1: nothing to send
     // 0: client disconnected
@@ -127,7 +127,7 @@ static inline int multisim_server_push_core(char const *server_name,
   }
 #endif
 
-  r = send(sockets[idx], send_buf, sizeof(send_buf), MSG_NOSIGNAL);
+  r = send_msg(sockets[idx], send_buf, sizeof(send_buf));
   if (r <= 0) { // send failed
     return MULTISIM_FAIL;
   }

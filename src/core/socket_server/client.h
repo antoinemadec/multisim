@@ -15,6 +15,7 @@
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
+#include "socket_io.h"
 
 /**
  * Implementation of a non-blocking socket client
