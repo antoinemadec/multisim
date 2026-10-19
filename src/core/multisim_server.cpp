@@ -166,6 +166,14 @@ int multisim_server_push_4state(char const *server_name, const data_handle_t dat
 //  - pull/push are deferred DPIs: a single data output and done,
 //    the 32-bit status word is {call_count[30:0], MULTISIM_SUCCESS|MULTISIM_FAIL}
 //  - ZEMI3 calls the DPIs of different transactors from different threads: they are serialized
+extern "C" {
+void multisim_server_start_zebu(const svBitVecVal *server_name);
+void multisim_server_pull_zebu(svBitVecVal *status_data, svBit *done,
+                               const svBitVecVal *server_name, int data_width);
+void multisim_server_push_zebu(svBitVecVal *status, svBit *done, const svBitVecVal *server_name,
+                               const svBitVecVal *data, int data_width);
+}
+
 static uint32_t zebu_call_cnt[MULTISIM_SERVER_MAX];
 static std::mutex zebu_mutex;
 

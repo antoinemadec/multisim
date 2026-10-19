@@ -26,15 +26,6 @@ int multisim_server_pull_4state(char const *server_name, data_handle_t data_hand
 int multisim_server_push_4state(char const *server_name, const data_handle_t data_handle,
                                 int data_width);
 
-#if defined(MULTISIM_ZEBU)
-// ZeBu ZEMI3 transactor DPIs, called by the server modules only (see multisim_server_common.svh)
-void multisim_server_start_zebu(const svBitVecVal *server_name);
-void multisim_server_pull_zebu(svBitVecVal *status_data, svBit *done,
-                               const svBitVecVal *server_name, int data_width);
-void multisim_server_push_zebu(svBitVecVal *status, svBit *done, const svBitVecVal *server_name,
-                               const svBitVecVal *data, int data_width);
-#endif
-
 #ifdef __cplusplus
 }
 #endif
