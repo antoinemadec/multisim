@@ -39,9 +39,11 @@ int Client::startWithAddressAndPort(char const *server_address, int server_port)
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(server_port);
   if (inet_pton(AF_INET, server_address, &serv_addr.sin_addr) <= 0) {
+    close(new_socket);
     return 0;
   }
   if (connect(new_socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+    close(new_socket);
     return 0;
   }
   fcntl(new_socket, F_SETFL, O_NONBLOCK);
