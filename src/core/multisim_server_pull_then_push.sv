@@ -7,7 +7,7 @@
 //    1. wait DPI_DELAY_CYCLES_INACTIVE cycles
 //    2. pull command (DPI call)
 //    3. push response (DPI call)
-//    4. back to 2. with DPI_DELAY_CYCLES_ACTIVE cycles, see get_dpi_delay()
+//    4. back to 2. with DPI_DELAY_CYCLES_ACTIVE cycles
 
 module multisim_server_pull_then_push #(
     parameter int PULL_DATA_WIDTH = 64,
@@ -17,8 +17,7 @@ module multisim_server_pull_then_push #(
     // adding delays in between calls improves that a lot
     parameter int DPI_DELAY_CYCLES_INACTIVE = 1000,
     parameter int DPI_DELAY_CYCLES_ACTIVE = 10,
-    // empty pulls at DPI_DELAY_CYCLES_ACTIVE after a transaction, before the ramp to
-    // DPI_DELAY_CYCLES_INACTIVE: low latency for a client sending its next command
+    // after a transaction, keep DPI_DELAY_CYCLES_ACTIVE for this many empty pulls
     parameter int DPI_GRACE_PULLS = 8
 ) (
     input bit clk,
@@ -50,51 +49,42 @@ module multisim_server_pull_then_push #(
     server_has_started = 1;
   end
 
-  // delay before the next pull, after empty_pulls empty pulls in a row (0: after a transaction):
-  //  - DPI_DELAY_CYCLES_ACTIVE for the first DPI_GRACE_PULLS empty pulls
-  //  - then gradually go back to DPI_DELAY_CYCLES_INACTIVE (x4 per empty pull),
-  //    this gives time to client to push next transaction after previous one was finished
-  localparam int RampMaxSteps = 16;  // 4**16 = 2**32: any int delay has reached the cap
-  function static int get_dpi_delay(input int empty_pulls);
-    int ramp_steps;
-    longint next_delay;
-    ramp_steps = empty_pulls - DPI_GRACE_PULLS;
-    if (ramp_steps <= 0) begin
-      return DPI_DELAY_CYCLES_ACTIVE;
-    end
-    if (ramp_steps > RampMaxSteps) begin
-      return DPI_DELAY_CYCLES_INACTIVE;
-    end
-    if (DPI_DELAY_CYCLES_ACTIVE <= 0) begin
-      next_delay = longint'(1) << (2 * (ramp_steps - 1));
+  // gradually go back from active to inactive delay,
+  // this gives time to client to push next transaction after previous one was finished
+  function static int get_inactive_dpi_delay(input int current_delay, input int grace_pulls);
+    int next_delay;
+    if (grace_pulls > 0) begin
+      next_delay = current_delay;
+    end else if (current_delay <= 0) begin
+      next_delay = 1;
     end else begin
-      next_delay = longint'(DPI_DELAY_CYCLES_ACTIVE) << (2 * ramp_steps);
+      next_delay = current_delay << 2;
     end
-    return (next_delay < DPI_DELAY_CYCLES_INACTIVE) ? int'(next_delay) : DPI_DELAY_CYCLES_INACTIVE;
+    return (next_delay < DPI_DELAY_CYCLES_INACTIVE) ? next_delay : DPI_DELAY_CYCLES_INACTIVE;
   endfunction
 
-  int empty_pulls = DPI_GRACE_PULLS;
+  int dpi_delay;
+  int grace_pulls;
   always @(posedge clk) begin
     logic [PULL_DATA_WIDTH-1:0] pull_data_dpi;
     if (server_has_started && (!pull_data_vld || pull_data_rdy)) begin
       // pull
       int pull_data_vld_dpi;
-      repeat (get_dpi_delay(empty_pulls)) begin
+      repeat (dpi_delay) begin
         pull_data_vld <= 0;
         @(posedge clk);
       end
       `MULTISIM_SERVER_PULL(pull_data_vld_dpi, pull_server_name, pull_data_dpi, PULL_DATA_WIDTH);
       pull_data_vld <= pull_data_vld_dpi[0];
       pull_data <= pull_data_dpi;
-      if (pull_data_vld_dpi[0]) begin
-        empty_pulls <= 0;
-      end else if (empty_pulls <= DPI_GRACE_PULLS + RampMaxSteps) begin
-        empty_pulls <= empty_pulls + 1;
-      end
+      dpi_delay <= pull_data_vld_dpi[0] ? DPI_DELAY_CYCLES_ACTIVE : get_inactive_dpi_delay(
+          dpi_delay, grace_pulls
+      );
+      grace_pulls <= pull_data_vld_dpi[0] ? DPI_GRACE_PULLS : grace_pulls - 1;
 
       // DEBUG: performance
-      // if (pull_data_vld_dpi[0] && get_dpi_delay(empty_pulls) != DPI_DELAY_CYCLES_INACTIVE) begin
-      //   $display("BACK TO BACK: empty_pulls=%0d", empty_pulls);
+      // if (pull_data_vld_dpi[0] && dpi_delay != DPI_DELAY_CYCLES_INACTIVE) begin
+      //   $display("BACK TO BACK: dpi_delay=%0d", dpi_delay);
       // end
 
       // push
