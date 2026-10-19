@@ -63,6 +63,7 @@ static inline int multisim_server_pull_core(char const *server_name, data_handle
     // -1: nothing to send
     // 0: client disconnected
     if (r == 0) {
+      close(sockets[idx]);
       sockets[idx] = -1;
     }
     return MULTISIM_FAIL;
@@ -108,6 +109,9 @@ static inline int multisim_server_push_core(char const *server_name,
   r = read(sockets[idx], send_buf, 1);
 
   if (sockets[idx] < 0 || r == 0) {
+    if (r == 0) {
+      close(sockets[idx]);
+    }
     sockets[idx] = server[idx]->acceptNewSocket();
     if (sockets[idx] < 0) {
       return MULTISIM_FAIL;
