@@ -25,11 +25,7 @@ module multisim_server_push #(
 `endif
     multisim_server_start(server_name);
     server_has_started = 1;
-`ifdef MULTISIM_ZEBU
-    data_rdy <= 1;  // ZEMI3: no mix of blocking and non-blocking assignments
-`else
-    data_rdy = 1;
-`endif
+    data_rdy <= 1;  // no mix of blocking and non-blocking assignments (ZeBu ZEMI3)
   end
 
   logic [DATA_WIDTH-1:0] data_q;
