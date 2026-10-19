@@ -23,12 +23,22 @@ int multisim_server_start(char const *server_name) {
   return MULTISIM_SUCCESS;
 }
 
+// index of a started server, the name of a server that was not started is an error
+static int get_server_idx(char const *server_name) {
+  auto it = server_name_to_idx.find(server_name);
+  if (it == server_name_to_idx.end()) {
+    fprintf(stderr, "ERROR: multisim: server of server [%s] was not started\n", server_name);
+    exit(EXIT_FAILURE);
+  }
+  return it->second;
+}
+
 static inline int multisim_server_pull_core(char const *server_name, data_handle_t data_handle,
                                             int data_width, bool is_4state) {
   int r;
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t read_buf[is_4state ? 2 * buf_32b_size : buf_32b_size];
-  int idx = server_name_to_idx[server_name];
+  int idx = get_server_idx(server_name);
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
   svBitVecVal *data;
   svLogicVecVal *data_4state;
@@ -81,7 +91,7 @@ static inline int multisim_server_push_core(char const *server_name,
   int r;
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t send_buf[is_4state ? 2 * buf_32b_size : buf_32b_size];
-  int idx = server_name_to_idx[server_name];
+  int idx = get_server_idx(server_name);
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
   svBitVecVal *data;
   svLogicVecVal *data_4state;
