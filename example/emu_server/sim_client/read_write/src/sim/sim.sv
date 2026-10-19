@@ -155,6 +155,7 @@ module sim;
       $display("0x%x -> [%0d]", wdata, address);
       read_rtl(address, rdata);
       $display("0x%x <- [%0d]", rdata, address);
+      if (rdata != wdata) $fatal(1, "expected 0x%x", wdata);
     end
 
     $display("\nfunctional test: all writes then all reads");
@@ -167,6 +168,8 @@ module sim;
       bit [63:0] rdata;
       read_rtl(address, rdata);
       $display("0x%x <- [%0d]", rdata, address);
+      if (rdata != 64'hdeadbeefcafedeca + address)
+        $fatal(1, "expected 0x%x", 64'hdeadbeefcafedeca + address);
     end
 
 
