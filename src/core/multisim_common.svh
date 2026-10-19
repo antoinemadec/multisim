@@ -40,16 +40,9 @@
 //  - MULTISIM_SERVER_PULL/PUSH(ret, server_name, data, data_width): call the pull/push DPI,
 //    ret = MULTISIM_SUCCESS|MULTISIM_FAIL
 //  - MULTISIM_SERVER_PULL/PUSH_DPI(server_name): process calling the DPI, ZEBU only
-//
-// ZEBU
-//  - server modules are ZEMI3 transactors: ZeBu removes the DPIs with outputs from its other
-//    DPI flows
-//  - no string type: the server name is a packed bit [8*MULTISIM_SERVER_NAME_LEN-1:0] holding
-//    the string literal
-//  - pull/push are ZEMI3 deferred DPIs: the clocks keep running for MULTISIM_ZEBU_DPI_LATENCY
-//    cycles while the host processes the call. ZEMI3 needs one deferred DPI per process and a
-//    single data output: MULTISIM_SERVER_PULL/PUSH request the call to the MULTISIM_SERVER_*_DPI
-//    process, then wait until the call count on top of its output reaches the request count
+// ZEBU: server modules are ZEMI3 transactors (no string type: packed server name), pull/push are
+// deferred DPIs, one per process with a single output: the macros request the call, then wait for
+// its call count (see multisim_server.cpp)
 `ifdef MULTISIM_ZEBU
 `ifndef MULTISIM_SERVER_NAME_LEN
 `define MULTISIM_SERVER_NAME_LEN 32
