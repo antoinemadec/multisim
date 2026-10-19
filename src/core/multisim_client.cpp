@@ -13,6 +13,15 @@ static int sockets[MULTISIM_SERVER_MAX];
 static int server_idx = 0;
 static std::map<std::string, int> server_name_to_idx;
 
+static FILE *open_client_info_file(std::string const &client_info_file, char const *mode) {
+  FILE *fp = fopen(client_info_file.c_str(), mode);
+  if (fp == NULL) {
+    perror(client_info_file.c_str());
+    exit(EXIT_FAILURE);
+  }
+  return fp;
+}
+
 void multisim_client_start(char const *server_runtime_directory, char const *server_name) {
   Client *client;
   std::string server_info_dir = std::string(server_runtime_directory) + "/.multisim";
@@ -38,11 +47,11 @@ void multisim_client_start(char const *server_runtime_directory, char const *ser
   FILE *fp;
   if (server_idx == 0) {
     client_info_file = info_file_path(server_info_dir, "client_", server_name);
-    fp = fopen(client_info_file.c_str(), "w");
+    fp = open_client_info_file(client_info_file, "w");
     fprintf(fp, "ip: %s\n", client->clientIp);
     fprintf(fp, "pid: %0d\n", getpid());
   } else {
-    fp = fopen(client_info_file.c_str(), "a");
+    fp = open_client_info_file(client_info_file, "a");
   }
   fprintf(fp, "server_%0d: %s %s %0d\n", server_idx, server_name, client->serverIp,
           client->serverPort);

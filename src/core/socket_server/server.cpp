@@ -23,7 +23,7 @@ void Server::start() {
     fprintf(stderr, "ERROR: server [%s] start() has already been called\n", serverName);
     exit(EXIT_FAILURE);
   }
-  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("socket failed");
     exit(EXIT_FAILURE);
   }
@@ -48,6 +48,10 @@ void Server::start() {
   mkdir(serverInfoDir, 0777);
   server_info_file = info_file_path(serverInfoDir, "server_", serverName);
   fp = fopen(server_info_file.c_str(), "w+");
+  if (fp == NULL) {
+    perror(server_info_file.c_str());
+    exit(EXIT_FAILURE);
+  }
   fprintf(fp, "ip: %s\n", serverIp);
   fprintf(fp, "port: %0d\n", serverPort);
   fflush(fp);
