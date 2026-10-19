@@ -9,9 +9,9 @@
 #include <string>
 #include <unistd.h>
 
-int sockets[MULTISIM_SERVER_MAX];
-int server_idx = 0;
-std::map<std::string, int> server_name_to_idx;
+static int sockets[MULTISIM_SERVER_MAX];
+static int server_idx = 0;
+static std::map<std::string, int> server_name_to_idx;
 
 void multisim_client_start(char const *server_runtime_directory, char const *server_name) {
   Client *client;
