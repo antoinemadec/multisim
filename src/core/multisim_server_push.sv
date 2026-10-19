@@ -6,7 +6,9 @@ module multisim_server_push #(
 ) (
     input bit clk,
     input `MULTISIM_SERVER_NAME_T server_name,
+    /* verilator lint_off MULTIDRIVEN */
     output bit data_rdy,
+    /* verilator lint_on MULTIDRIVEN */
     input bit data_vld,
     input logic [DATA_WIDTH-1:0] data
 );
@@ -25,7 +27,9 @@ module multisim_server_push #(
 `endif
     multisim_server_start(server_name);
     server_has_started = 1;
+    /* verilator lint_off INITIALDLY */
     data_rdy <= 1;  // no mix of blocking and non-blocking assignments (ZeBu ZEMI3)
+    /* verilator lint_on INITIALDLY */
   end
 
   logic [DATA_WIDTH-1:0] data_q;
