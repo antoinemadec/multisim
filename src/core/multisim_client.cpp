@@ -33,11 +33,11 @@ void multisim_client_start(char const *server_runtime_directory, char const *ser
   fcntl(sockets[server_idx], F_SETFL, flags);
 #endif
 
-  // dump info
-  std::string first_server_name = server_name_to_idx.begin()->first;
-  std::string client_info_file = info_file_path(server_info_dir, "client_", first_server_name);
+  // dump info, in the file named after the 1st server of the client
+  static std::string client_info_file;
   FILE *fp;
   if (server_idx == 0) {
+    client_info_file = info_file_path(server_info_dir, "client_", server_name);
     fp = fopen(client_info_file.c_str(), "w");
     fprintf(fp, "ip: %s\n", client->clientIp);
     fprintf(fp, "pid: %0d\n", getpid());
