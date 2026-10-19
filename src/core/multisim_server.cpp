@@ -14,6 +14,7 @@ std::map<std::string, int> server_name_to_idx;
 
 int multisim_server_start(char const *server_name) {
   assert(server_idx < MULTISIM_SERVER_MAX);
+  multisim_check_server_name(server_name);
   server[server_idx] = new Server(".multisim", server_name);
   server[server_idx]->start();
   sockets[server_idx] = -1;
@@ -171,11 +172,17 @@ static std::mutex zebu_mutex;
 
 static std::string zebu_server_name(const svBitVecVal *server_name) {
   std::string name;
-  for (int i = MULTISIM_SERVER_NAME_LEN - 1; i >= 0; i--) {
+  for (int i = MULTISIM_SERVER_NAME_LEN; i >= 0; i--) {
     char c = (server_name[i / 4] >> (8 * (i % 4))) & 0xff;
     if (c != 0) {
       name += c;
     }
+  }
+  // the port keeps the last MULTISIM_SERVER_NAME_LEN+1 characters of longer names
+  if (name.size() > MULTISIM_SERVER_NAME_LEN) {
+    fprintf(stderr, "ERROR: multisim: server name [...%s] has more than %d characters\n",
+            name.c_str(), MULTISIM_SERVER_NAME_LEN);
+    exit(EXIT_FAILURE);
   }
   return name;
 }

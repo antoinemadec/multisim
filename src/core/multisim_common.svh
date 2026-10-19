@@ -45,13 +45,14 @@
 // its call count (see multisim_server.cpp)
 `ifdef MULTISIM_ZEBU
 `ifndef MULTISIM_SERVER_NAME_LEN
-`define MULTISIM_SERVER_NAME_LEN 32
+`define MULTISIM_SERVER_NAME_LEN 512
 `endif
 `ifndef MULTISIM_ZEBU_DPI_LATENCY
 `define MULTISIM_ZEBU_DPI_LATENCY 16
 `endif
 
-`define MULTISIM_SERVER_NAME_T bit [8*`MULTISIM_SERVER_NAME_LEN-1:0]
+// 1 more character: longer names are detected instead of being truncated (multisim_server.cpp)
+`define MULTISIM_SERVER_NAME_T bit [8*(`MULTISIM_SERVER_NAME_LEN+1)-1:0]
 
 `define MULTISIM_SERVER_PULL(ret, server_name, data, data_width) \
   begin \

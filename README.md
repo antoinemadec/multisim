@@ -83,8 +83,8 @@ keep the same code, [multisim_common.svh](./src/core/multisim_common.svh) adapts
   flows), declare them in the zCui project: `xtors -add {multisim_server_pull ...} -type ZEMI3`
 * pull/push are ZEMI3 deferred DPIs: the emulator clocks keep running for
   `MULTISIM_ZEBU_DPI_LATENCY` (default 16) cycles while the host processes the call
-* `server_name` is a packed `bit [8*MULTISIM_SERVER_NAME_LEN-1:0]` (ZEMI3 has no `string` type):
-  connect a string literal of at most `MULTISIM_SERVER_NAME_LEN` (default 32) characters
+* `server_name` is a packed `bit [8*(MULTISIM_SERVER_NAME_LEN+1)-1:0]` (ZEMI3 has no `string`
+  type): connect a string literal of at most `MULTISIM_SERVER_NAME_LEN` (default 512) characters
 * the runtime loads `libdpi.so` and the transactor libraries with `zemi3 -lib`
 
 The [emu_server examples](./example/emu_server/) share their ZeBu flow in

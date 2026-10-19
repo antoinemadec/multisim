@@ -1,4 +1,5 @@
 #include "client.h"
+#include "info_file.h"
 #include <string>
 
 Client::Client(char const *server_info_dir, char const *name)
@@ -6,7 +7,7 @@ Client::Client(char const *server_info_dir, char const *name)
 
 void Client::start() {
   int i;
-  std::string server_file = std::string(serverInfoDir) + "/server_" + std::string(serverName) + ".txt";
+  std::string server_file = info_file_path(serverInfoDir, "server_", serverName);
 
   i = 0;
   while (!getServerIpAndPort(server_file.c_str())) {

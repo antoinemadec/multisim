@@ -35,13 +35,13 @@
 
 // ZEBU
 //  - server modules are ZEMI3 transactors: no string type, the server name is a packed
-//    bit [8*MULTISIM_SERVER_NAME_LEN-1:0] holding the string literal (right-justified)
+//    bit [8*(MULTISIM_SERVER_NAME_LEN+1)-1:0] holding the string literal (right-justified)
 //  - DPIs with outputs are ZEMI3 deferred DPIs: the emulator clocks keep running while the
 //    host processes the call
-#if defined(MULTISIM_ZEBU)
+
+// server names: at most MULTISIM_SERVER_NAME_LEN characters, on all targets
 #ifndef MULTISIM_SERVER_NAME_LEN
-#define MULTISIM_SERVER_NAME_LEN 32
-#endif
+#define MULTISIM_SERVER_NAME_LEN 512
 #endif
 
 // SW
@@ -67,3 +67,15 @@ typedef uint32_t *data_handle_t;
 
 #define MULTISIM_SUCCESS 1
 #define MULTISIM_FAIL 0
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+static inline void multisim_check_server_name(char const *server_name) {
+  size_t len = strlen(server_name);
+  if (len > MULTISIM_SERVER_NAME_LEN) {
+    fprintf(stderr, "ERROR: multisim: server name [%s] has %zu characters, the limit is %d\n",
+            server_name, len, MULTISIM_SERVER_NAME_LEN);
+    exit(EXIT_FAILURE);
+  }
+}

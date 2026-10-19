@@ -1,4 +1,5 @@
 #include "server.h"
+#include "info_file.h"
 #include <string>
 
 std::set<std::string> Server::serverNameSet;
@@ -45,7 +46,7 @@ void Server::start() {
 
   // print server's ip and port
   mkdir(serverInfoDir, 0777);
-  server_info_file = std::string(serverInfoDir) + "/server_" + std::string(serverName) + ".txt";
+  server_info_file = info_file_path(serverInfoDir, "server_", serverName);
   fp = fopen(server_info_file.c_str(), "w+");
   fprintf(fp, "ip: %s\n", serverIp);
   fprintf(fp, "port: %0d\n", serverPort);
