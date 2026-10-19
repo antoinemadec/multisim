@@ -25,6 +25,8 @@ void Client::start() {
     }
     i++;
     usleep(100000); // wait for 0.1s
+    // the info file can be a stale one: read it again
+    getServerIpAndPort(server_file.c_str());
   };
   printf("Client: connect to server %s at %s:%0d\n", serverName, serverIp, serverPort);
 }
