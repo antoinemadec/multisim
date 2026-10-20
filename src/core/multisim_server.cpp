@@ -41,7 +41,7 @@ static inline int multisim_server_pull_core(char const *server_name, data_handle
   uint32_t read_buf[is_4state ? 2 * buf_32b_size : buf_32b_size];
   int idx = get_server_idx(server_name);
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
-  svBitVecVal *data;
+  svBitVecVal *data = NULL;
   svLogicVecVal *data_4state;
   if (is_4state) {
     data_4state = (svLogicVecVal *)svGetArrayPtr(data_handle);
@@ -59,7 +59,8 @@ static inline int multisim_server_pull_core(char const *server_name, data_handle
     }
   }
 
-  r = read_msg(sockets[idx], read_buf, sizeof(read_buf));
+  // 2-state data is read into the SV array itself
+  r = read_msg(sockets[idx], is_4state ? read_buf : data, sizeof(read_buf));
   if (r <= 0) {
     // -1: nothing to send
     // 0: client disconnected
@@ -70,8 +71,8 @@ static inline int multisim_server_pull_core(char const *server_name, data_handle
     return MULTISIM_FAIL;
   }
 
-  for (int i = 0; i < buf_32b_size; i++) {
-    if (is_4state) {
+  if (is_4state) {
+    for (int i = 0; i < buf_32b_size; i++) {
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
       data_4state[i].aval = read_buf[i];
       data_4state[i].bval = read_buf[buf_32b_size + i];
@@ -79,8 +80,6 @@ static inline int multisim_server_pull_core(char const *server_name, data_handle
       data[i] = read_buf[i];
       data[buf_32b_size + i] = read_buf[buf_32b_size + i];
 #endif
-    } else {
-      data[i] = read_buf[i];
     }
   }
   return MULTISIM_SUCCESS;
@@ -95,7 +94,7 @@ static inline int multisim_server_push_core(char const *server_name,
   uint32_t send_buf[is_4state ? 2 * buf_32b_size : buf_32b_size];
   int idx = get_server_idx(server_name);
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
-  svBitVecVal *data;
+  svBitVecVal *data = NULL;
   svLogicVecVal *data_4state;
   if (is_4state) {
     data_4state = (svLogicVecVal *)svGetArrayPtr(data_handle);
@@ -113,8 +112,10 @@ static inline int multisim_server_push_core(char const *server_name,
     }
   }
 
-  for (int i = 0; i < buf_32b_size; i++) {
-    if (is_4state) {
+  // 2-state data is sent from the SV array itself, 4-state data as {aval..., bval...}
+  const void *msg = data;
+  if (is_4state) {
+    for (int i = 0; i < buf_32b_size; i++) {
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
       send_buf[i] = data_4state[i].aval;
       send_buf[buf_32b_size + i] = data_4state[i].bval;
@@ -122,9 +123,8 @@ static inline int multisim_server_push_core(char const *server_name,
       send_buf[i] = data[i];
       send_buf[buf_32b_size + i] = data[buf_32b_size + i];
 #endif
-    } else {
-      send_buf[i] = data[i];
     }
+    msg = send_buf;
   }
 
 #ifdef SIMULATE_SEND_FAIL_SERVER
@@ -136,7 +136,7 @@ static inline int multisim_server_push_core(char const *server_name,
   }
 #endif
 
-  r = send_msg(sockets[idx], send_buf, sizeof(send_buf));
+  r = send_msg(sockets[idx], msg, sizeof(send_buf));
   if (r <= 0) { // send failed
     // the client disconnected (0, EPIPE...): the next push accepts a new client
     if (r == 0 || (errno != EAGAIN && errno != EWOULDBLOCK)) {
