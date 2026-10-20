@@ -3,12 +3,15 @@
 
 usage() {
   cat << EOF
-usage: $(basename "$0") [-h] [-t TOOLS] [-z]
+usage: $(basename "$0") [-h] [-t TOOLS] [-a] [-z]
 
 run short versions of the tests and examples, then print a summary
 
   -h        display this help
   -t TOOLS  comma-separated list among sw,verilator,vcs,zebu (default: all of them)
+  -a        also run the full example suites (long): example/sim_server/run_all.sh with
+            verilator, example/emu_server/run_all.sh -e zebu with zebu (builds the 3 ZeBu
+            databases, about 1 hour)
   -z        ZeBu: build the database of emu_server/sw_client/read_write if it does not
             exist (about 1 hour), otherwise ZeBu reuses it or is skipped
 
@@ -19,10 +22,12 @@ EOF
 }
 
 tools=sw,verilator,vcs,zebu
+all=0
 zebu_build=0
-while getopts "ht:z" opt; do
+while getopts "ht:az" opt; do
   case $opt in
     t) tools=$OPTARG ;;
+    a) all=1 ;;
     z) zebu_build=1 ;;
     h)
       usage
@@ -94,6 +99,7 @@ for tool in ${tools//,/ }; do
         run verilator 900 "$ex/sim_server/sim_client/$e/multi/run" 2
       done
       run verilator 900 "$ex/sim_server/sim_client/axi_server_push/run"
+      ((all)) && run verilator 3600 "$ex/sim_server/run_all.sh"
       ;;
     vcs)
       has vcs vcs || continue
@@ -102,6 +108,10 @@ for tool in ${tools//,/ }; do
       ;;
     zebu)
       has zebu zRci || continue
+      if ((all)); then
+        run zebu 14400 "$ex/emu_server/run_all.sh" -e zebu
+        continue
+      fi
       e=$ex/emu_server/sw_client/read_write
       db=$e/output
       # the database is stale if a source is newer than its libdpi.so (built last)

@@ -46,6 +46,7 @@ Tested platform combinations:
 ./test/run_regression.sh            # all the tools: sw,verilator,vcs,zebu
 ./test/run_regression.sh -t sw,vcs  # some of them
 ./test/run_regression.sh -z         # also build the ZeBu database if needed (about 1 hour)
+./test/run_regression.sh -a         # also run the full example suites (example/*/run_all.sh, long)
 ```
 Short versions of the tests, a summary at the end (PASS/FAIL/SKIP per tool and test), exit code 1
 if a test fails. Tools that are not installed are skipped. Logs and the summary (`summary.txt`) are
