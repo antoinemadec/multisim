@@ -40,7 +40,7 @@ while getopts "ht:az" opt; do
   esac
 done
 
-root=$(dirname "$(dirname "$(readlink -f "$0")")")
+root=$(dirname "$(readlink -f "$0")")
 source "$root/env.sh" # MULTISIM_SRC of this repository
 logs=$root/output_regression
 rm -rf "$logs"
@@ -81,13 +81,13 @@ ex=$root/example
 for tool in ${tools//,/ }; do
   case $tool in
     sw)
-      for t in "$root"/test/sw/*.sh; do
+      for t in "$root"/example/sw_server/sw_client/unit/*.sh; do
         name=$(basename "$t" .sh)
         [ "$name" = lib ] || [ "$name" = run_all ] && continue
         if timeout 300 bash "$t" > "$logs/sw.$name.log" 2>&1; then
-          record sw "test/sw/$name" PASS
+          record sw "unit/$name" PASS
         else
-          record sw "test/sw/$name" FAIL "$(grep -m1 '^FAIL: ' "$logs/sw.$name.log")"
+          record sw "unit/$name" FAIL "$(grep -m1 '^FAIL: ' "$logs/sw.$name.log")"
         fi
       done
       run sw 300 "$ex/sw_server/sw_client/read_write/run"

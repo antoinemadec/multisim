@@ -2,7 +2,7 @@
 # MULTISIM_SRC selects the sources under test (default: this repository)
 
 TEST_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
-MULTISIM_SRC=${MULTISIM_SRC:-$(readlink -f "$TEST_DIR/../../src")}
+MULTISIM_SRC=${MULTISIM_SRC:-$(readlink -f "$TEST_DIR/../../../../src")}
 CORE=$MULTISIM_SRC/core
 CXX="${CXX:-g++} -g -DMULTISIM_SW -I$CORE"
 
