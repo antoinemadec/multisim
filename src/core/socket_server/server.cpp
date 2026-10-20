@@ -1,17 +1,16 @@
 #include "server.h"
+#include "info_file.h"
 #include <string>
 
-std::set<char const *> Server::serverNameSet;
+std::set<std::string> Server::serverNameSet;
 
 Server::Server(char const *server_info_dir, char const *name)
     : serverInfoDir(server_info_dir), serverName(name) {
-  char *name_copy = new char[SERVERNAME_MAX_SIZE];
-  strcpy(name_copy, name);
-  if (Server::serverNameSet.find(name_copy) != Server::serverNameSet.end()) {
-    fprintf(stderr, "ERROR: server name [%s] already exist, use another name\n", name_copy);
+  if (Server::serverNameSet.find(name) != Server::serverNameSet.end()) {
+    fprintf(stderr, "ERROR: server name [%s] already exist, use another name\n", name);
     exit(EXIT_FAILURE);
   }
-  Server::serverNameSet.insert(name_copy);
+  Server::serverNameSet.insert(name);
 }
 
 void Server::start() {
@@ -24,7 +23,7 @@ void Server::start() {
     fprintf(stderr, "ERROR: server [%s] start() has already been called\n", serverName);
     exit(EXIT_FAILURE);
   }
-  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("socket failed");
     exit(EXIT_FAILURE);
   }
@@ -47,8 +46,12 @@ void Server::start() {
 
   // print server's ip and port
   mkdir(serverInfoDir, 0777);
-  server_info_file = std::string(serverInfoDir) + "/server_" + std::string(serverName) + ".txt";
+  server_info_file = info_file_path(serverInfoDir, "server_", serverName);
   fp = fopen(server_info_file.c_str(), "w+");
+  if (fp == NULL) {
+    perror(server_info_file.c_str());
+    exit(EXIT_FAILURE);
+  }
   fprintf(fp, "ip: %s\n", serverIp);
   fprintf(fp, "port: %0d\n", serverPort);
   fflush(fp);

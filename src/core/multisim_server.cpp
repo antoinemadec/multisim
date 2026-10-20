@@ -7,13 +7,14 @@
 #include <string>
 #include <unistd.h>
 
-Server *server[MULTISIM_SERVER_MAX];
-int sockets[MULTISIM_SERVER_MAX];
-int server_idx = 0;
-std::map<std::string, int> server_name_to_idx;
+static Server *server[MULTISIM_SERVER_MAX];
+static int sockets[MULTISIM_SERVER_MAX];
+static int server_idx = 0;
+static std::map<std::string, int> server_name_to_idx;
 
 int multisim_server_start(char const *server_name) {
   assert(server_idx < MULTISIM_SERVER_MAX);
+  multisim_check_server_name(server_name);
   server[server_idx] = new Server(".multisim", server_name);
   server[server_idx]->start();
   sockets[server_idx] = -1;
@@ -22,12 +23,22 @@ int multisim_server_start(char const *server_name) {
   return MULTISIM_SUCCESS;
 }
 
+// index of a started server, the name of a server that was not started is an error
+static int get_server_idx(char const *server_name) {
+  auto it = server_name_to_idx.find(server_name);
+  if (it == server_name_to_idx.end()) {
+    fprintf(stderr, "ERROR: multisim: server of server [%s] was not started\n", server_name);
+    exit(EXIT_FAILURE);
+  }
+  return it->second;
+}
+
 static inline int multisim_server_pull_core(char const *server_name, data_handle_t data_handle,
                                             int data_width, bool is_4state) {
   int r;
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t read_buf[is_4state ? 2 * buf_32b_size : buf_32b_size];
-  int idx = server_name_to_idx[server_name];
+  int idx = get_server_idx(server_name);
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
   svBitVecVal *data;
   svLogicVecVal *data_4state;
@@ -47,11 +58,12 @@ static inline int multisim_server_pull_core(char const *server_name, data_handle
     }
   }
 
-  r = read(sockets[idx], read_buf, sizeof(read_buf));
+  r = read_msg(sockets[idx], read_buf, sizeof(read_buf));
   if (r <= 0) {
     // -1: nothing to send
     // 0: client disconnected
     if (r == 0) {
+      close(sockets[idx]);
       sockets[idx] = -1;
     }
     return MULTISIM_FAIL;
@@ -80,7 +92,7 @@ static inline int multisim_server_push_core(char const *server_name,
   int r;
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t send_buf[is_4state ? 2 * buf_32b_size : buf_32b_size];
-  int idx = server_name_to_idx[server_name];
+  int idx = get_server_idx(server_name);
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
   svBitVecVal *data;
   svLogicVecVal *data_4state;
@@ -97,6 +109,9 @@ static inline int multisim_server_push_core(char const *server_name,
   r = read(sockets[idx], send_buf, 1);
 
   if (sockets[idx] < 0 || r == 0) {
+    if (r == 0) {
+      close(sockets[idx]);
+    }
     sockets[idx] = server[idx]->acceptNewSocket();
     if (sockets[idx] < 0) {
       return MULTISIM_FAIL;
@@ -126,7 +141,7 @@ static inline int multisim_server_push_core(char const *server_name,
   }
 #endif
 
-  r = send(sockets[idx], send_buf, sizeof(send_buf), 0);
+  r = send_msg(sockets[idx], send_buf, sizeof(send_buf));
   if (r <= 0) { // send failed
     return MULTISIM_FAIL;
   }
@@ -171,11 +186,17 @@ static std::mutex zebu_mutex;
 
 static std::string zebu_server_name(const svBitVecVal *server_name) {
   std::string name;
-  for (int i = MULTISIM_SERVER_NAME_LEN - 1; i >= 0; i--) {
+  for (int i = MULTISIM_SERVER_NAME_LEN; i >= 0; i--) {
     char c = (server_name[i / 4] >> (8 * (i % 4))) & 0xff;
     if (c != 0) {
       name += c;
     }
+  }
+  // the port keeps the last MULTISIM_SERVER_NAME_LEN+1 characters of longer names
+  if (name.size() > MULTISIM_SERVER_NAME_LEN) {
+    fprintf(stderr, "ERROR: multisim: server name [...%s] has more than %d characters\n",
+            name.c_str(), MULTISIM_SERVER_NAME_LEN);
+    exit(EXIT_FAILURE);
   }
   return name;
 }

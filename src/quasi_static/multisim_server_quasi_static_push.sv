@@ -23,11 +23,14 @@ module multisim_server_quasi_static_push #(
       data_queue.push_back(data);
       data_prev <= data;
     end
-    if (data_rdy && data_queue.size() > 0) begin
-      data_push <= data_queue.pop_front();
-      data_vld <= 1;
-    end else begin
-      data_vld <= 0;
+    // keep the data until it is accepted
+    if (!data_vld || data_rdy) begin
+      if (data_queue.size() > 0) begin
+        data_push <= data_queue.pop_front();
+        data_vld <= 1;
+      end else begin
+        data_vld <= 0;
+      end
     end
   end
 

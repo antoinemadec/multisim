@@ -41,6 +41,24 @@ Tested platform combinations:
 | emu             | untested                                        | untested                                        | untested                                      |
 | sw              | ✅ [examples](./example/sim_server/sw_client/)  | ✅ [examples](./example/emu_server/sw_client/)  | ✅ [examples](./example/sw_server/sw_client/) |
 
+## regression
+```bash
+./run_regression.sh            # all the tools: sw,verilator,vcs,zebu
+./run_regression.sh -t sw,vcs  # some of them
+./run_regression.sh -z         # also build the ZeBu database if needed (about 1 hour)
+./run_regression.sh -a         # also run the long sim_server and emu_server example suites
+```
+Short versions of the tests, a summary at the end (PASS/FAIL/SKIP per tool and test), exit code 1
+if a test fails. Tools that are not installed are skipped. Logs and the summary (`summary.txt`) are
+in `output_regression/`.
+* `sw` (g++ only, about 1 min):
+  [example/sw_server/sw_client/run_all.sh](./example/sw_server/sw_client/run_all.sh), the read_write
+  example and the [unit](./example/sw_server/sw_client/unit/) regression tests of the library
+* `verilator`: sim_server examples, 2 CPUs for the multi ones
+* `vcs`: sim_server/sw_client/read_write and sim_server/sim_client/axi_4state/multi (2 CPUs)
+* `zebu`: emu_server/sw_client/read_write, reusing its database when it is newer than the sources,
+  skipped otherwise (`-z` builds it)
+
 ## available modules
 * core library (ready/valid protocol)
     * `client->server`: [multisim_client_push](./src/core/multisim_client_push.sv) and [multisim_server_pull](./src/core/multisim_server_pull.sv)
@@ -77,30 +95,21 @@ Look at those files to have more info about those platforms:
 * client modules need to set `server_runtime_directory` to know the port/ip address of each channel
 
 ## ZeBu
-Define `MULTISIM_ZEBU` (implies `MULTISIM_EMULATION`) in SV and C/C++ compilation: the server modules
-keep the same code, [multisim_common.svh](./src/core/multisim_common.svh) adapts their DPI calls:
-* the server modules are ZEMI3 transactors (ZeBu removes the DPIs with outputs from its other DPI
-  flows), declare them in the zCui project: `xtors -add {multisim_server_pull ...} -type ZEMI3`
-* pull/push are ZEMI3 deferred DPIs: the emulator clocks keep running for
-  `MULTISIM_ZEBU_DPI_LATENCY` (default 16) cycles while the host processes the call
-* `server_name` is a packed `bit [8*MULTISIM_SERVER_NAME_LEN-1:0]` (ZEMI3 has no `string` type):
-  connect a string literal of at most `MULTISIM_SERVER_NAME_LEN` (default 32) characters
-* the runtime loads `libdpi.so` and the transactor libraries with `zemi3 -lib`
-
-The [emu_server examples](./example/emu_server/) share their ZeBu flow in
-[example/emu_server/zebu](./example/emu_server/zebu/), with 2 environment variables for site settings:
-* `MULTISIM_ZEBU_SETTINGS`: UTF file sourced by the zCui project (e.g. `grid_cmd`, `clock_config`)
-* `MULTISIM_ZEBU_LAUNCHER`: command prefix of `zRci` to book an emulator
-  (e.g. `srun --emu-work-dir ./zcui.work/zebu.work`)
-
 ```bash
+# optional site settings
+export MULTISIM_ZEBU_SETTINGS=site.utf  # UTF sourced by the zCui project (grid_cmd, clock_config...)
+export MULTISIM_ZEBU_LAUNCHER="srun --emu-work-dir ./zcui.work/zebu.work"  # zRci prefix, books an emulator
+
 cd example/emu_server/sw_client/core
 ./compile -e zebu
 ./output/run
 # or all the examples
-cd example/emu_server
-./run_all.sh -e zebu
+cd example/emu_server && ./run_all.sh -e zebu
 ```
+* define `MULTISIM_ZEBU` instead of `MULTISIM_EMULATION` in SV and C/C++ compilation
+* `server_name` must be a string literal of at most 512 characters
+* the server modules are ZEMI3 transactors, see [example/emu_server/zebu](./example/emu_server/zebu/)
+  for the zCui project and the zRci script
 
 ## 4-state support
 By default, `multisim` uses 2-state logic (0 and 1).

@@ -90,6 +90,7 @@ module multisim_server_pull_then_push #(
       // push
       if (pull_data_vld_dpi[0]) begin
         int push_data_accepted;
+        logic [PUSH_DATA_WIDTH-1:0] push_data_q;
         @(posedge clk);
         pull_data_vld <= 0;
         push_data_rdy <= 1;
@@ -98,9 +99,11 @@ module multisim_server_pull_then_push #(
           @(posedge clk);
         end
         push_data_rdy <= 0;  // the call can take cycles (ZEBU)
-        `MULTISIM_SERVER_PUSH(push_data_accepted, push_server_name, push_data, PUSH_DATA_WIDTH);
-        if (!push_data_accepted[0]) begin
-          $display("WARNING: push_data wasn't accepted in %m");
+        push_data_q = push_data;
+        push_data_accepted = 0;
+        while (!push_data_accepted[0]) begin
+          `MULTISIM_SERVER_PUSH(push_data_accepted, push_server_name, push_data_q, PUSH_DATA_WIDTH);
+          if (!push_data_accepted[0]) @(posedge clk);  // retry until the client gets the data
         end
       end
     end

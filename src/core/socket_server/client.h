@@ -11,6 +11,12 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+// send() fails instead of killing the process (SIGPIPE) when the peer is gone
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+#include "socket_io.h"
+
 /**
  * Implementation of a non-blocking socket client
  */

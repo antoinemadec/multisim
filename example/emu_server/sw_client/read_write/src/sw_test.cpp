@@ -67,6 +67,7 @@ int main() {
     printf("%0lx -> [%0d]\n", wdata, address);
     rdata = read_rtl(address);
     printf("%0lx <- [%0d]\n", rdata, address);
+    assert(rdata == wdata);
   }
 
   printf("\nfunctional test: all writes then all reads\n");
@@ -79,6 +80,7 @@ int main() {
     uint64_t rdata;
     rdata = read_rtl(address);
     printf("%0lx <- [%0d]\n", rdata, address);
+    assert(rdata == 0xdeadbeefcafedeca + address);
   }
 
   //-----------------------------------------------------------

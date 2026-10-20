@@ -48,6 +48,7 @@ int main() {
   r = multisim_client_pull("tx64", read_buf, 64);
   printf("tx64: 0x%08x 0x%08x\n", read_buf[0], read_buf[1]);
   assert(r > 0);
+  assert(read_buf[0] == write_buf[0] && read_buf[1] == write_buf[1]);
 
   //-----------------------------------------------------------
   // bandwidth tests

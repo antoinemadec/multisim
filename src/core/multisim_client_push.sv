@@ -14,6 +14,7 @@ module multisim_client_push #(
   localparam PUSH_DATA_WIDTH = DATA_WIDTH;
   `include "multisim_client_common.svh"
 
+  bit client_has_started = 0;
   initial begin
     data_rdy = 0;
 `ifndef MULTISIM_EMULATION
@@ -22,6 +23,7 @@ module multisim_client_push #(
     wait (server_name != "");
 `endif
     multisim_client_start(server_runtime_directory, server_name);
+    client_has_started = 1;
     data_rdy = 1;
   end
 
@@ -34,7 +36,7 @@ module multisim_client_push #(
       data_rdy <= data_rdy_dpi[0];
       data_q   <= data;
     end
-    if (!data_rdy) begin
+    if (client_has_started && !data_rdy) begin
       int data_rdy_dpi;
       data_rdy_dpi = multisim_client_push_packed(server_name, data_q, DATA_WIDTH);
       data_rdy <= data_rdy_dpi[0];

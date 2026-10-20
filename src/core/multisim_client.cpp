@@ -1,6 +1,7 @@
 #include "multisim_client.h"
 #include "multisim_common.h"
 #include "socket_server/client.h"
+#include "socket_server/info_file.h"
 
 #include <cassert>
 #include <map>
@@ -8,15 +9,25 @@
 #include <string>
 #include <unistd.h>
 
-int sockets[MULTISIM_SERVER_MAX];
-int server_idx = 0;
-std::map<std::string, int> server_name_to_idx;
+static int sockets[MULTISIM_SERVER_MAX];
+static int server_idx = 0;
+static std::map<std::string, int> server_name_to_idx;
+
+static FILE *open_client_info_file(std::string const &client_info_file, char const *mode) {
+  FILE *fp = fopen(client_info_file.c_str(), mode);
+  if (fp == NULL) {
+    perror(client_info_file.c_str());
+    exit(EXIT_FAILURE);
+  }
+  return fp;
+}
 
 void multisim_client_start(char const *server_runtime_directory, char const *server_name) {
   Client *client;
   std::string server_info_dir = std::string(server_runtime_directory) + "/.multisim";
 
   assert(server_idx < MULTISIM_SERVER_MAX);
+  multisim_check_server_name(server_name);
 
   client = new Client(server_info_dir.c_str(), server_name);
   client->start();
@@ -31,16 +42,16 @@ void multisim_client_start(char const *server_runtime_directory, char const *ser
   fcntl(sockets[server_idx], F_SETFL, flags);
 #endif
 
-  // dump info
-  std::string first_server_name = server_name_to_idx.begin()->first;
-  std::string client_info_file = server_info_dir + "/client_" + first_server_name + ".txt";
+  // dump info, in the file named after the 1st server of the client
+  static std::string client_info_file;
   FILE *fp;
   if (server_idx == 0) {
-    fp = fopen(client_info_file.c_str(), "w");
+    client_info_file = info_file_path(server_info_dir, "client_", server_name);
+    fp = open_client_info_file(client_info_file, "w");
     fprintf(fp, "ip: %s\n", client->clientIp);
     fprintf(fp, "pid: %0d\n", getpid());
   } else {
-    fp = fopen(client_info_file.c_str(), "a");
+    fp = open_client_info_file(client_info_file, "a");
   }
   fprintf(fp, "server_%0d: %s %s %0d\n", server_idx, server_name, client->serverIp,
           client->serverPort);
@@ -52,6 +63,16 @@ void multisim_client_start(char const *server_runtime_directory, char const *ser
   server_idx++;
 }
 
+// index of a started server, the name of a server that was not started is an error
+static int get_server_idx(char const *server_name) {
+  auto it = server_name_to_idx.find(server_name);
+  if (it == server_name_to_idx.end()) {
+    fprintf(stderr, "ERROR: multisim: client of server [%s] was not started\n", server_name);
+    exit(EXIT_FAILURE);
+  }
+  return it->second;
+}
+
 // #define SIMULATE_SEND_FAIL_CLIENT
 static inline int multisim_client_push_core(char const *server_name,
                                             const data_handle_t data_handle, int data_width,
@@ -59,7 +80,7 @@ static inline int multisim_client_push_core(char const *server_name,
   int r;
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t send_buf[is_4state ? 2 * buf_32b_size : buf_32b_size];
-  int idx = server_name_to_idx[server_name];
+  int idx = get_server_idx(server_name);
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
   svBitVecVal *data = (svBitVecVal *)svGetArrayPtr(data_handle);
   svLogicVecVal *data_4state = (svLogicVecVal *)svGetArrayPtr(data_handle);
@@ -90,7 +111,7 @@ static inline int multisim_client_push_core(char const *server_name,
   }
 #endif
 
-  r = send(sockets[idx], send_buf, sizeof(send_buf), 0);
+  r = send_msg(sockets[idx], send_buf, sizeof(send_buf));
   if (r <= 0) { // send failed
     return MULTISIM_FAIL;
   }
@@ -102,7 +123,7 @@ static inline int multisim_client_pull_core(char const *server_name, data_handle
   int r;
   int buf_32b_size = (data_width + 31) / 32;
   uint32_t read_buf[is_4state ? 2 * buf_32b_size : buf_32b_size];
-  int idx = server_name_to_idx[server_name];
+  int idx = get_server_idx(server_name);
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
   svBitVecVal *data = (svBitVecVal *)svGetArrayPtr(data_handle);
   svLogicVecVal *data_4state = (svLogicVecVal *)svGetArrayPtr(data_handle);
@@ -110,7 +131,7 @@ static inline int multisim_client_pull_core(char const *server_name, data_handle
   uint32_t *data = data_handle;
 #endif
 
-  r = read(sockets[idx], read_buf, sizeof(read_buf));
+  r = read_msg(sockets[idx], read_buf, sizeof(read_buf));
   if (r <= 0) {
     return MULTISIM_FAIL;
   }

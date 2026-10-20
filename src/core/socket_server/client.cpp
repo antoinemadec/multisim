@@ -1,4 +1,5 @@
 #include "client.h"
+#include "info_file.h"
 #include <string>
 
 Client::Client(char const *server_info_dir, char const *name)
@@ -6,7 +7,7 @@ Client::Client(char const *server_info_dir, char const *name)
 
 void Client::start() {
   int i;
-  std::string server_file = std::string(serverInfoDir) + "/server_" + std::string(serverName) + ".txt";
+  std::string server_file = info_file_path(serverInfoDir, "server_", serverName);
 
   i = 0;
   while (!getServerIpAndPort(server_file.c_str())) {
@@ -24,6 +25,8 @@ void Client::start() {
     }
     i++;
     usleep(100000); // wait for 0.1s
+    // the info file can be a stale one: read it again
+    getServerIpAndPort(server_file.c_str());
   };
   printf("Client: connect to server %s at %s:%0d\n", serverName, serverIp, serverPort);
 }
@@ -38,9 +41,11 @@ int Client::startWithAddressAndPort(char const *server_address, int server_port)
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(server_port);
   if (inet_pton(AF_INET, server_address, &serv_addr.sin_addr) <= 0) {
+    close(new_socket);
     return 0;
   }
   if (connect(new_socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+    close(new_socket);
     return 0;
   }
   fcntl(new_socket, F_SETFL, O_NONBLOCK);
@@ -79,10 +84,16 @@ int Client::getServerIpAndPort(char const *server_file) {
   if (fp == NULL) {
     return 0;
   }
-  fscanf(fp, "%s %s", &garbage[0], &ip_str[0]); // read "ip: xxx.xxx.xxx.xxx"
+  int port;
+  // read "ip: xxx.xxx.xxx.xxx" and "port: xxxxx", the server can still be writing the file
+  if (fscanf(fp, "%127s %127s", &garbage[0], &ip_str[0]) != 2 ||
+      fscanf(fp, "%127s %d", &garbage[0], &port) != 2) {
+    fclose(fp);
+    return 0;
+  }
   serverIp = (char *)malloc(128);
   strcpy((char *)serverIp, &ip_str[0]);
-  fscanf(fp, "%s %d", &garbage[0], &serverPort); // read "port: xxxxx"
+  serverPort = port;
   fclose(fp);
   return 1;
 }
