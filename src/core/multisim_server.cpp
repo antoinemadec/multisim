@@ -3,6 +3,7 @@
 #include "socket_server/server.h"
 
 #include <cassert>
+#include <errno.h>
 #include <map>
 #include <string>
 #include <unistd.h>
@@ -105,13 +106,7 @@ static inline int multisim_server_push_core(char const *server_name,
   uint32_t *data = data_handle;
 #endif
 
-  // 0: client disconnected
-  r = read(sockets[idx], send_buf, 1);
-
-  if (sockets[idx] < 0 || r == 0) {
-    if (r == 0) {
-      close(sockets[idx]);
-    }
+  if (sockets[idx] < 0) {
     sockets[idx] = server[idx]->acceptNewSocket();
     if (sockets[idx] < 0) {
       return MULTISIM_FAIL;
@@ -143,6 +138,11 @@ static inline int multisim_server_push_core(char const *server_name,
 
   r = send_msg(sockets[idx], send_buf, sizeof(send_buf));
   if (r <= 0) { // send failed
+    // the client disconnected (0, EPIPE...): the next push accepts a new client
+    if (r == 0 || (errno != EAGAIN && errno != EWOULDBLOCK)) {
+      close(sockets[idx]);
+      sockets[idx] = -1;
+    }
     return MULTISIM_FAIL;
   }
   return MULTISIM_SUCCESS;
