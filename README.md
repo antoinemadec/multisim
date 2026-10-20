@@ -56,8 +56,12 @@ in `output_regression/`.
   example and the [unit](./example/sw_server/sw_client/unit/) regression tests of the library
 * `verilator`: sim_server examples, 2 CPUs for the multi ones
 * `vcs`: sim_server/sw_client/read_write and sim_server/sim_client/axi_4state/multi (2 CPUs)
-* `zebu`: emu_server/sw_client/read_write, reusing its database when it is newer than the sources,
-  skipped otherwise (`-z` builds it)
+* `zebu`: emu_server/sw_client/read_write, reusing its database unless the SV sources changed
+  (then skipped, `-z` builds it); the host code is rebuilt alone when the C sources changed
+
+[example/sw_server/sw_client/bench/run](./example/sw_server/sw_client/bench/run) measures the
+client/server library (SW, about 15 s): latency of a round trip, throughput of a stream, cost of a
+pull with no data.
 
 ## available modules
 * core library (ready/valid protocol)

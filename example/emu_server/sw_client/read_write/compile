@@ -10,7 +10,7 @@ compile_args="$@"
 #--------------------------------------------------------------
 usage() {
   cat << EOF
-usage: $(basename $0) [-h] [-e EMULATOR] [-o OUPUT_DIR]
+usage: $(basename $0) [-h] [-e EMULATOR] [-o OUPUT_DIR] [-c]
 
 compile an emulation database in OUTPUT_DIR
 
@@ -18,6 +18,7 @@ where:
   -h                        : display this help
   -e EMULATOR               : veloce (default) or zebu
   -o OUTPUT_DIR             : build in OUTPUT_DIR
+  -c                        : only compile the C code (host side), keep the emulation database
 
 EOF
 }
@@ -56,13 +57,11 @@ compile_veloce() {
   banner "veloce: compilation"
   velcomp
 
-  dpi_cflags="-DMULTISIM_EMULATION -I${VELOCE_HOME}/tbx/include"
 }
 
 
 compile_zebu() {
   $emulation_dir/../../zebu/compile_zebu $emulation_dir/src/*.sv
-  dpi_cflags="-DMULTISIM_ZEBU -I${ZEBU_ROOT}/include"
 }
 
 
@@ -71,6 +70,7 @@ compile_zebu() {
 #--------------------------------------------------------------
 output_dir="output"
 emulator="veloce"
+c_only=0
 
 while [ "$#" -gt 0 ]
 do
@@ -89,6 +89,10 @@ do
       output_dir=$1
       shift 1
       ;;
+    -c)
+      shift 1
+      c_only=1
+      ;;
     *)
       usage
       exit 1
@@ -100,22 +104,29 @@ done
 output_dir=$(readlink -f $output_dir)
 emulation_dir="$(readlink -e $(dirname $0))"
 
-banner "remove $output_dir"
-rm -rf $output_dir
-mkdir -p $output_dir
-cd $output_dir
+[[ $emulator == veloce ]] && dpi_cflags="-DMULTISIM_EMULATION -I${VELOCE_HOME}/tbx/include"
+[[ $emulator == zebu ]] && dpi_cflags="-DMULTISIM_ZEBU -I${ZEBU_ROOT}/include"
 
-banner "compile_$emulator"
-compile_$emulator
+if ((c_only)); then
+  cd $output_dir
+else
+  banner "remove $output_dir"
+  rm -rf $output_dir
+  mkdir -p $output_dir
+  cd $output_dir
 
-banner "copy runtime files"
-cp -rf $emulation_dir/input/runtime/* .
+  banner "compile_$emulator"
+  compile_$emulator
 
-banner "create info.txt"
-[[ $emulator == veloce ]] && (
-grep Frequency veloce.log/compile_* | sed 's/.*Freq/Freq/'
-grep 'Number of Boards' veloce.log/compile_* | sed 's/.*Boards/Boards/'
-) > info.txt
+  banner "copy runtime files"
+  cp -rf $emulation_dir/input/runtime/* .
+
+  banner "create info.txt"
+  [[ $emulator == veloce ]] && (
+  grep Frequency veloce.log/compile_* | sed 's/.*Freq/Freq/'
+  grep 'Number of Boards' veloce.log/compile_* | sed 's/.*Boards/Boards/'
+  ) > info.txt
+fi
 
 banner "compile C"
 # server: libdpi.so, needed by the emulator at runtime
