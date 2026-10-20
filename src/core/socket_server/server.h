@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
+#include <poll.h>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>

@@ -94,15 +94,24 @@ void Server::startUnixSocket() {
   }
 }
 
+// the servers call this at every pull/push while they have no client: a poll() of the
+// listening sockets (one cheap system call) replaces the accept() attempts, which cost
+// microseconds each even when no connection is pending
 int Server::acceptNewSocket() {
+  struct pollfd pfd[2] = {{server_fd, POLLIN, 0}, {unix_fd, POLLIN, 0}};
   int new_socket = -1;
-  if (unix_fd >= 0) {
+  if (poll(pfd, unix_fd >= 0 ? 2 : 1, 0) <= 0) {
+    return -1;
+  }
+  if (pfd[1].revents & POLLIN) {
     new_socket = accept(unix_fd, NULL, NULL);
   }
-  if (new_socket < 0) {
+  if (new_socket < 0 && (pfd[0].revents & POLLIN)) {
     new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
   }
-  fcntl(new_socket, F_SETFL, O_NONBLOCK);
+  if (new_socket >= 0) {
+    fcntl(new_socket, F_SETFL, O_NONBLOCK);
+  }
   return new_socket;
 }
 
