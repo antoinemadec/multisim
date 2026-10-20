@@ -97,6 +97,8 @@ Look at those files to have more info about those platforms:
 * each **simulation** can use multiple channels
 * `multisim` modules need a unique `server_name` to link a client/server channel together
 * client modules need to set `server_runtime_directory` to know the port/ip address of each channel
+* a client on the host of the server connects through a Unix socket (in `.multisim/`), a client on
+  another host through TCP
 
 ## ZeBu
 ```bash

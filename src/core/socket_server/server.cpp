@@ -1,5 +1,7 @@
 #include "server.h"
 #include "info_file.h"
+#include "unix_socket.h"
+#include <limits.h>
 #include <string>
 
 std::set<std::string> Server::serverNameSet;
@@ -44,8 +46,10 @@ void Server::start() {
   serverIp = getIp();
   serverIsRunning = true;
 
-  // print server's ip and port
   mkdir(serverInfoDir, 0777);
+  startUnixSocket();
+
+  // print server's ip, port and Unix socket
   server_info_file = info_file_path(serverInfoDir, "server_", serverName);
   fp = fopen(server_info_file.c_str(), "w+");
   if (fp == NULL) {
@@ -54,14 +58,50 @@ void Server::start() {
   }
   fprintf(fp, "ip: %s\n", serverIp);
   fprintf(fp, "port: %0d\n", serverPort);
+  if (unix_fd >= 0) {
+    fprintf(fp, "unix: %s\n", unixSocketPath.c_str());
+  }
   fflush(fp);
   fclose(fp);
   printf("Server: [%s] has started, info in %s\n", serverName, server_info_file.c_str());
 }
 
+// Unix socket in the info directory, the clients of this host prefer it to TCP,
+// the server works without it (TCP only) if it cannot be created
+void Server::startUnixSocket() {
+  char dir[PATH_MAX];
+  struct sockaddr_un addr;
+  int dirfd;
+  if (realpath(serverInfoDir, dir) == NULL) {
+    return;
+  }
+  std::string file = unix_socket_file(serverName);
+  unixSocketPath = std::string(dir) + "/" + file;
+  if ((unix_fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+    return;
+  }
+  unlink(unixSocketPath.c_str()); // left by a previous server
+  if (unix_socket_addr(dir, file, &addr, &dirfd) < 0 ||
+      ::bind(unix_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0 || listen(unix_fd, 8) < 0) {
+    perror(unixSocketPath.c_str());
+    close(unix_fd);
+    unix_fd = -1;
+  } else {
+    fcntl(unix_fd, F_SETFL, O_NONBLOCK);
+  }
+  if (dirfd >= 0) {
+    close(dirfd);
+  }
+}
+
 int Server::acceptNewSocket() {
-  int new_socket;
-  new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
+  int new_socket = -1;
+  if (unix_fd >= 0) {
+    new_socket = accept(unix_fd, NULL, NULL);
+  }
+  if (new_socket < 0) {
+    new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
+  }
   fcntl(new_socket, F_SETFL, O_NONBLOCK);
   return new_socket;
 }

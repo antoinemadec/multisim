@@ -1,5 +1,6 @@
 #include "client.h"
 #include "info_file.h"
+#include "unix_socket.h"
 #include <string>
 
 Client::Client(char const *server_info_dir, char const *name)
@@ -19,16 +20,47 @@ void Client::start() {
   };
 
   i = 0;
-  while (!startWithAddressAndPort(serverIp, serverPort)) {
+  // the Unix socket first: it only answers on the host of the server
+  while (
+      !(startWithUnixSocket(serverUnixSocket) || startWithAddressAndPort(serverIp, serverPort))) {
     if (i == 0) {
-      printf("Client: failed to connect to server %s at %s:%0d\n", serverName, serverIp, serverPort);
+      printf("Client: failed to connect to server %s at %s:%0d\n", serverName, serverIp,
+             serverPort);
     }
     i++;
     usleep(100000); // wait for 0.1s
     // the info file can be a stale one: read it again
     getServerIpAndPort(server_file.c_str());
   };
-  printf("Client: connect to server %s at %s:%0d\n", serverName, serverIp, serverPort);
+  printf("Client: connect to server %s at %s\n", serverName, serverAddress.c_str());
+}
+
+// connect to the Unix socket of the server, 0 if path is empty or the server is on another host
+int Client::startWithUnixSocket(std::string const &path) {
+  struct sockaddr_un addr;
+  int dirfd = -1;
+  size_t slash = path.rfind('/');
+  if (path.empty() || slash == std::string::npos) {
+    return 0;
+  }
+  if ((new_socket = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+    return 0;
+  }
+  if (unix_socket_addr(path.substr(0, slash), path.substr(slash + 1), &addr, &dirfd) < 0 ||
+      connect(new_socket, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    if (dirfd >= 0) {
+      close(dirfd);
+    }
+    close(new_socket);
+    return 0;
+  }
+  if (dirfd >= 0) {
+    close(dirfd);
+  }
+  fcntl(new_socket, F_SETFL, O_NONBLOCK);
+  clientIp = getIp();
+  serverAddress = path;
+  return 1;
 }
 
 int Client::startWithAddressAndPort(char const *server_address, int server_port) {
@@ -51,6 +83,7 @@ int Client::startWithAddressAndPort(char const *server_address, int server_port)
   fcntl(new_socket, F_SETFL, O_NONBLOCK);
 
   clientIp = getIp();
+  serverAddress = std::string(server_address) + ":" + std::to_string(server_port);
 
   return 1;
 }
@@ -94,6 +127,13 @@ int Client::getServerIpAndPort(char const *server_file) {
   serverIp = (char *)malloc(128);
   strcpy((char *)serverIp, &ip_str[0]);
   serverPort = port;
+  // optional "unix: /path/of/the/socket"
+  char unix_path[4096];
+  serverUnixSocket = "";
+  if (fscanf(fp, "%127s %4095s", &garbage[0], &unix_path[0]) == 2 &&
+      strcmp(garbage, "unix:") == 0) {
+    serverUnixSocket = unix_path;
+  }
   fclose(fp);
   return 1;
 }
