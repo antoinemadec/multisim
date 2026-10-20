@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
+#include <poll.h>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,7 +27,8 @@
  *
  * Main features:
  *  - finds 1st port available starting from BASE_PORT
- *  - write port and ip info in 'server_<serverName>.txt' at start()
+ *  - also listens on a Unix socket for the clients of the same host (unix_socket.h)
+ *  - write port, ip and Unix socket info in 'server_<serverName>.txt' at start()
  *  - forbids servers with the same name
  */
 class Server {
@@ -41,6 +43,9 @@ public:
 
 private:
   int server_fd;
+  int unix_fd = -1;
+  std::string unixSocketPath;
+  void startUnixSocket();
   struct sockaddr_in address;
   int addrlen = sizeof(address);
   bool serverIsRunning = false;

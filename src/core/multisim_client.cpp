@@ -88,8 +88,10 @@ static inline int multisim_client_push_core(char const *server_name,
   uint32_t *data = data_handle;
 #endif
 
-  for (int i = 0; i < buf_32b_size; i++) {
-    if (is_4state) {
+  // 2-state data is sent from the SV array itself, 4-state data as {aval..., bval...}
+  const void *msg = data;
+  if (is_4state) {
+    for (int i = 0; i < buf_32b_size; i++) {
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
       send_buf[i] = data_4state[i].aval;
       send_buf[buf_32b_size + i] = data_4state[i].bval;
@@ -97,9 +99,8 @@ static inline int multisim_client_push_core(char const *server_name,
       send_buf[i] = data[i];
       send_buf[buf_32b_size + i] = data[buf_32b_size + i];
 #endif
-    } else {
-      send_buf[i] = data[i];
     }
+    msg = send_buf;
   }
 
 #ifdef SIMULATE_SEND_FAIL_CLIENT
@@ -111,7 +112,7 @@ static inline int multisim_client_push_core(char const *server_name,
   }
 #endif
 
-  r = send_msg(sockets[idx], send_buf, sizeof(send_buf));
+  r = send_msg(sockets[idx], msg, sizeof(send_buf));
   if (r <= 0) { // send failed
     return MULTISIM_FAIL;
   }
@@ -131,13 +132,14 @@ static inline int multisim_client_pull_core(char const *server_name, data_handle
   uint32_t *data = data_handle;
 #endif
 
-  r = read_msg(sockets[idx], read_buf, sizeof(read_buf));
+  // 2-state data is read into the SV array itself
+  r = read_msg(sockets[idx], is_4state ? read_buf : data, sizeof(read_buf));
   if (r <= 0) {
     return MULTISIM_FAIL;
   }
 
-  for (int i = 0; i < buf_32b_size; i++) {
-    if (is_4state) {
+  if (is_4state) {
+    for (int i = 0; i < buf_32b_size; i++) {
 #if defined(MULTISIM_SV_DPI_OPEN_ARRAY)
       data_4state[i].aval = read_buf[i];
       data_4state[i].bval = read_buf[buf_32b_size + i];
@@ -145,8 +147,6 @@ static inline int multisim_client_pull_core(char const *server_name, data_handle
       data[i] = read_buf[i];
       data[buf_32b_size + i] = read_buf[buf_32b_size + i];
 #endif
-    } else {
-      data[i] = read_buf[i];
     }
   }
   return MULTISIM_SUCCESS;

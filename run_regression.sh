@@ -16,8 +16,10 @@ run short versions of the tests and examples, then print a summary:
   -a        also run the long example suites: example/sim_server/run_all.sh with verilator,
             example/emu_server/run_all.sh -e zebu with zebu (builds the 3 ZeBu databases,
             about 1 hour)
-  -z        ZeBu: build the database of emu_server/sw_client/read_write if it does not
-            exist (about 1 hour), otherwise ZeBu reuses it or is skipped
+  -z        ZeBu: build the database of emu_server/sw_client/read_write if it is missing or
+            its SV sources changed (about 1 hour), otherwise ZeBu reuses it or is skipped
+            (the host code, libdpi.so and run_sw_test, is rebuilt alone when its C sources
+            changed)
 
 the tools that are not installed are skipped, the logs and the summary
 (summary.txt) are in output_regression/
@@ -71,6 +73,7 @@ run() {
     record "$tool" "$name" PASS
   else
     record "$tool" "$name" FAIL "$log"
+    return 1
   fi
 }
 
@@ -118,15 +121,23 @@ for tool in ${tools//,/ }; do
       fi
       e=$ex/emu_server/sw_client/read_write
       db=$e/output
-      # the database is stale if a source is newer than its libdpi.so (built last)
-      if [ ! -d "$db/zcui.work" ] || [ ! -f "$db/libdpi.so" ] ||
-        [ -n "$(find "$MULTISIM_SRC/core" "$e/src" "$ex/emu_server/zebu" -newer "$db/libdpi.so")" ]; then
+      # the database depends on the SV sources, the host code (libdpi.so, run_sw_test) on the C
+      # ones: each is rebuilt when the hash of its sources differs from the one of its last build
+      hw_sha=$(cat "$MULTISIM_SRC"/core/*.sv "$MULTISIM_SRC"/core/*.svh "$e"/src/*.sv \
+        "$ex"/emu_server/zebu/* | sha1sum | cut -c1-40)
+      host_sha=$(cat "$MULTISIM_SRC"/core/*.cpp "$MULTISIM_SRC"/core/*.h \
+        "$MULTISIM_SRC"/core/socket_server/* "$e"/src/*.cpp | sha1sum | cut -c1-40)
+      if [ ! -d "$db/zcui.work" ] || [ "$(cat "$db/.hw_sha" 2> /dev/null)" != "$hw_sha" ]; then
         if ((!zebu_build)); then
           record zebu "emu_server/sw_client/read_write" SKIP "no up-to-date database, -z builds it"
           continue
         fi
-        run zebu 10800 "$e/compile" -e zebu
-        [ -f "$db/libdpi.so" ] || continue
+        run zebu 10800 "$e/compile" -e zebu || continue # about 1 hour
+        echo "$hw_sha" > "$db/.hw_sha"
+        echo "$host_sha" > "$db/.host_sha"
+      elif [ "$(cat "$db/.host_sha" 2> /dev/null)" != "$host_sha" ]; then
+        run zebu 300 "$e/compile" -e zebu -c || continue # a few seconds
+        echo "$host_sha" > "$db/.host_sha"
       fi
       run zebu 900 "$db/run"
       ;;
