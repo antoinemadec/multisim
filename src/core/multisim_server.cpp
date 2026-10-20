@@ -175,6 +175,7 @@ int multisim_server_push_4state(char const *server_name, const data_handle_t dat
 #if defined(MULTISIM_ZEBU)
 #include <cstring>
 #include <mutex>
+#include <vector>
 
 // ZeBu: ZEMI3 transactor DPIs, see multisim_server_common.svh
 //  - the server name is a packed string literal (right-justified, no string type in ZEMI3)
@@ -183,6 +184,8 @@ int multisim_server_push_4state(char const *server_name, const data_handle_t dat
 //  - ZEMI3 calls the DPIs of different transactors from different threads: they are serialized
 static uint32_t zebu_call_cnt[MULTISIM_SERVER_MAX];
 static std::mutex zebu_mutex;
+
+static const int ZEBU_NAME_WORDS = (MULTISIM_SERVER_NAME_LEN + 1 + 3) / 4;
 
 static std::string zebu_server_name(const svBitVecVal *server_name) {
   std::string name;
@@ -201,20 +204,36 @@ static std::string zebu_server_name(const svBitVecVal *server_name) {
   return name;
 }
 
-// start the server on its first call: ZEMI3 does not order calls from different processes
-static std::string zebu_server_start(const svBitVecVal *server_name) {
-  std::string name = zebu_server_name(server_name);
-  if (server_name_to_idx.find(name) == server_name_to_idx.end()) {
-    // the Server keeps the name pointer
-    multisim_server_start(strdup(name.c_str()));
+// server of a packed name: started on its first call (ZEMI3 does not order calls from
+// different processes), then found by comparing the packed name with the ones already
+// decoded, without decoding it again
+struct ZebuServer {
+  svBitVecVal packed_name[ZEBU_NAME_WORDS];
+  char const *name; // the Server keeps this pointer
+  int idx;
+};
+static std::vector<ZebuServer> zebu_servers;
+
+static ZebuServer const &zebu_server_start(const svBitVecVal *server_name) {
+  for (auto const &s : zebu_servers) {
+    if (memcmp(s.packed_name, server_name, sizeof(s.packed_name)) == 0) {
+      return s;
+    }
   }
-  return name;
+  ZebuServer s;
+  memcpy(s.packed_name, server_name, sizeof(s.packed_name));
+  s.name = strdup(zebu_server_name(server_name).c_str());
+  if (server_name_to_idx.find(s.name) == server_name_to_idx.end()) {
+    multisim_server_start(s.name);
+  }
+  s.idx = server_name_to_idx[s.name];
+  zebu_servers.push_back(s);
+  return zebu_servers.back();
 }
 
-static inline uint32_t zebu_status(std::string const &name, int r) {
-  int idx = server_name_to_idx[name];
-  zebu_call_cnt[idx]++;
-  return (zebu_call_cnt[idx] << 1) | (r == MULTISIM_SUCCESS ? 1 : 0);
+static inline uint32_t zebu_status(ZebuServer const &s, int r) {
+  zebu_call_cnt[s.idx]++;
+  return (zebu_call_cnt[s.idx] << 1) | (r == MULTISIM_SUCCESS ? 1 : 0);
 }
 
 extern "C" void multisim_server_start_zebu(const svBitVecVal *server_name) {
@@ -225,9 +244,9 @@ extern "C" void multisim_server_start_zebu(const svBitVecVal *server_name) {
 extern "C" void multisim_server_pull_zebu(svBitVecVal *status_data, svBit *done,
                                           const svBitVecVal *server_name, int data_width) {
   std::lock_guard<std::mutex> lock(zebu_mutex);
-  std::string name = zebu_server_start(server_name);
-  int r = multisim_server_pull_core(name.c_str(), status_data, data_width, false);
-  status_data[(data_width + 31) / 32] = zebu_status(name, r);
+  ZebuServer const &s = zebu_server_start(server_name);
+  int r = multisim_server_pull_core(s.name, status_data, data_width, false);
+  status_data[(data_width + 31) / 32] = zebu_status(s, r);
   *done = 1;
 }
 
@@ -235,9 +254,9 @@ extern "C" void multisim_server_push_zebu(svBitVecVal *status, svBit *done,
                                           const svBitVecVal *server_name, const svBitVecVal *data,
                                           int data_width) {
   std::lock_guard<std::mutex> lock(zebu_mutex);
-  std::string name = zebu_server_start(server_name);
-  int r = multisim_server_push_core(name.c_str(), (data_handle_t)data, data_width, false);
-  status[0] = zebu_status(name, r);
+  ZebuServer const &s = zebu_server_start(server_name);
+  int r = multisim_server_push_core(s.name, (data_handle_t)data, data_width, false);
+  status[0] = zebu_status(s, r);
   *done = 1;
 }
 #endif
