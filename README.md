@@ -48,7 +48,8 @@ Tested platform combinations:
 ./test/run_regression.sh -z         # also build the ZeBu database if needed (about 1 hour)
 ```
 Short versions of the tests, a summary at the end (PASS/FAIL/SKIP per tool and test), exit code 1
-if a test fails. Tools that are not installed are skipped. Logs are in `output_regression/`.
+if a test fails. Tools that are not installed are skipped. Logs and the summary (`summary.txt`) are
+in `output_regression/`.
 * `sw` (g++ only, about 1 min): [test/sw](./test/sw/) regression tests of the client/server
   library (`test/sw/run_all.sh` runs them alone), and the sw_server example
 * `verilator`: sim_server examples, 2 CPUs for the multi ones

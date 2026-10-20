@@ -12,7 +12,8 @@ run short versions of the tests and examples, then print a summary
   -z        ZeBu: build the database of emu_server/sw_client/read_write if it does not
             exist (about 1 hour), otherwise ZeBu reuses it or is skipped
 
-the tools that are not installed are skipped, the logs are in output_regression/
+the tools that are not installed are skipped, the logs and the summary
+(summary.txt) are in output_regression/
 exit code: 1 if a test fails, 0 otherwise
 EOF
 }
@@ -125,6 +126,8 @@ echo
 echo "#--------------------------------------------------------------"
 echo "# summary"
 echo "#--------------------------------------------------------------"
-printf "%s\n" "${summary[@]}"
-((failed)) && echo "FAIL" || echo "PASS"
+{
+  printf "%s\n" "${summary[@]}"
+  ((failed)) && echo "FAIL" || echo "PASS"
+} | tee "$logs/summary.txt"
 exit $failed
