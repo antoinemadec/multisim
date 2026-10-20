@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# SW micro-benchmarks of the client/server library (about 15 s): latency of a round trip,
+# throughput of a server->client stream, cost of a pull with no data
+# usage: run [N_FACTOR]  (N_FACTOR scales the number of messages, default 1)
+
+set -e
+cd "$(dirname "$(readlink -f "$0")")"
+factor=${1:-1}
+rm -rf output
+mkdir -p output
+cd output
+
+flags="-O2 -DMULTISIM_SW -I$MULTISIM_SRC/core"
+g++ $flags -DROLE_SERVER -o srv ../bench.cpp \
+  $MULTISIM_SRC/core/multisim_server.cpp $MULTISIM_SRC/core/socket_server/server.cpp
+g++ $flags -DROLE_CLIENT -o cli ../bench.cpp \
+  $MULTISIM_SRC/core/multisim_client.cpp $MULTISIM_SRC/core/socket_server/client.cpp
+
+# bench MODE N W: the server runs in the background, the client prints the result
+bench() {
+  rm -rf .multisim
+  ./srv "$1" "$2" "$3" > "srv_$1_$3.log" 2>&1 &
+  timeout 300 ./cli "$1" "$2" "$3" | grep -E 'us/|msg/s' || echo "$1 W=$3: FAIL"
+  wait
+}
+
+bench pingpong $((20000 * factor)) 64
+bench pingpong $((20000 * factor)) 4096
+bench stream $((200000 * factor)) 64
+bench stream $((20000 * factor)) 8192
+bench stream $((2000 * factor)) 1000000
+# idle: the server measures, the client only connects and waits
+rm -rf .multisim
+./srv idle $((1000000 * factor)) 64 > srv_idle.log 2>&1 &
+./cli idle 1 64 > /dev/null 2>&1 &
+wait %1
+grep 'us/' srv_idle.log
+kill %2 2> /dev/null
+wait 2> /dev/null || true
