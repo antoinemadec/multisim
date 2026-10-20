@@ -41,6 +41,21 @@ Tested platform combinations:
 | emu             | untested                                        | untested                                        | untested                                      |
 | sw              | ✅ [examples](./example/sim_server/sw_client/)  | ✅ [examples](./example/emu_server/sw_client/)  | ✅ [examples](./example/sw_server/sw_client/) |
 
+## regression
+```bash
+./test/run_regression.sh            # all the tools: sw,verilator,vcs,zebu
+./test/run_regression.sh -t sw,vcs  # some of them
+./test/run_regression.sh -z         # also build the ZeBu database if needed (about 1 hour)
+```
+Short versions of the tests, a summary at the end (PASS/FAIL/SKIP per tool and test), exit code 1
+if a test fails. Tools that are not installed are skipped. Logs are in `output_regression/`.
+* `sw` (g++ only, about 1 min): [test/sw](./test/sw/) regression tests of the client/server
+  library (`test/sw/run_all.sh` runs them alone), and the sw_server example
+* `verilator`: sim_server examples, 2 CPUs for the multi ones
+* `vcs`: sim_server/sw_client/read_write and sim_server/sim_client/axi_4state/multi (2 CPUs)
+* `zebu`: emu_server/sw_client/read_write, reusing its database when it is newer than the sources,
+  skipped otherwise (`-z` builds it)
+
 ## available modules
 * core library (ready/valid protocol)
     * `client->server`: [multisim_client_push](./src/core/multisim_client_push.sv) and [multisim_server_pull](./src/core/multisim_server_pull.sv)
