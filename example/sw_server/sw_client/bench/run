@@ -29,11 +29,16 @@ bench pingpong $((20000 * factor)) 4096
 bench stream $((200000 * factor)) 64
 bench stream $((20000 * factor)) 8192
 bench stream $((2000 * factor)) 1000000
-# idle: the server measures, the client only connects and waits
-rm -rf .multisim
-./srv idle $((1000000 * factor)) 64 > srv_idle.log 2>&1 &
-./cli idle 1 64 > /dev/null 2>&1 &
-wait %1
-grep 'us/' srv_idle.log
-kill %2 2> /dev/null
-wait 2> /dev/null || true
+# upstream and idle: the server measures, the client is stopped at the end
+server_bench() {
+  rm -rf .multisim
+  ./srv "$1" "$2" "$3" > "srv_$1_$3.log" 2>&1 &
+  ./cli "$1" "$2" "$3" > /dev/null 2>&1 &
+  wait %1
+  grep -E 'us/|msg/s' "srv_$1_$3.log" || echo "$1 W=$3: FAIL"
+  kill %2 2> /dev/null
+  wait 2> /dev/null || true
+}
+server_bench upstream $((200000 * factor)) 64
+server_bench upstream $((20000 * factor)) 8192
+server_bench idle $((1000000 * factor)) 64
