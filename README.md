@@ -99,6 +99,9 @@ Look at those files to have more info about those platforms:
 * client modules need to set `server_runtime_directory` to know the port/ip address of each channel
 * a client on the host of the server connects through a Unix socket (in `.multisim/`), a client on
   another host through TCP
+* the pull modules call their DPI at every cycle while no data comes: their
+  `DPI_DELAY_CYCLES_INACTIVE`/`DPI_DELAY_CYCLES_ACTIVE` parameters space the calls (faster idle
+  simulation, more latency), e.g. 1000 cycles cuts the idle cost of a VCS client by 75%
 
 ## ZeBu
 ```bash
