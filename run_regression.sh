@@ -5,13 +5,17 @@ usage() {
   cat << EOF
 usage: $(basename "$0") [-h] [-t TOOLS] [-a] [-z]
 
-run short versions of the tests and examples, then print a summary
+run short versions of the tests and examples, then print a summary:
+  sw         example/sw_server/sw_client/run_all.sh: read_write and the unit tests
+  verilator  sim_server examples, 2 CPUs for the multi ones
+  vcs        sim_server/sw_client/read_write and axi_4state/multi (2 CPUs)
+  zebu       emu_server/sw_client/read_write, reusing its database if up to date
 
   -h        display this help
   -t TOOLS  comma-separated list among sw,verilator,vcs,zebu (default: all of them)
-  -a        also run the full example suites (long): example/sim_server/run_all.sh with
-            verilator, example/emu_server/run_all.sh -e zebu with zebu (builds the 3 ZeBu
-            databases, about 1 hour)
+  -a        also run the long example suites: example/sim_server/run_all.sh with verilator,
+            example/emu_server/run_all.sh -e zebu with zebu (builds the 3 ZeBu databases,
+            about 1 hour)
   -z        ZeBu: build the database of emu_server/sw_client/read_write if it does not
             exist (about 1 hour), otherwise ZeBu reuses it or is skipped
 
@@ -81,16 +85,16 @@ ex=$root/example
 for tool in ${tools//,/ }; do
   case $tool in
     sw)
-      for t in "$root"/example/sw_server/sw_client/unit/*.sh; do
-        name=$(basename "$t" .sh)
-        [ "$name" = lib ] || [ "$name" = run_all ] && continue
-        if timeout 300 bash "$t" > "$logs/sw.$name.log" 2>&1; then
-          record sw "unit/$name" PASS
-        else
-          record sw "unit/$name" FAIL "$(grep -m1 '^FAIL: ' "$logs/sw.$name.log")"
-        fi
-      done
-      run sw 300 "$ex/sw_server/sw_client/read_write/run"
+      # one summary line per "TEST PASS|FAIL..." line of the sw_client run_all.sh
+      log=$logs/sw.sw_server.sw_client.run_all.sh.log
+      (cd "$ex/sw_server/sw_client" && timeout 900 ./run_all.sh) > "$log" 2>&1 < /dev/null
+      rc=$?
+      while read -r name result detail; do
+        record sw "sw_server/sw_client/$name" "${result%:}" "$detail"
+      done < <(grep -E '^[^ ]+ +(PASS|FAIL)' "$log")
+      if ((rc)) && ! grep -qE '^[^ ]+ +FAIL' "$log"; then
+        record sw "sw_server/sw_client/run_all.sh" FAIL "$log"
+      fi
       ;;
     verilator)
       has verilator verilator || continue

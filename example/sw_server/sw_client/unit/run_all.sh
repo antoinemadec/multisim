@@ -9,7 +9,7 @@ failed=0
 for t in "${tests[@]}"; do
   t=${t%.sh}
   [ "$t" = lib ] || [ "$t" = run_all ] && continue
-  printf "%-20s " "$t"
+  printf "%-19s " "$t"
   if out=$(bash "$t.sh" 2>&1); then
     echo PASS
   else

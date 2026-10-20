@@ -46,13 +46,14 @@ Tested platform combinations:
 ./run_regression.sh            # all the tools: sw,verilator,vcs,zebu
 ./run_regression.sh -t sw,vcs  # some of them
 ./run_regression.sh -z         # also build the ZeBu database if needed (about 1 hour)
-./run_regression.sh -a         # also run the full example suites (example/*/run_all.sh, long)
+./run_regression.sh -a         # also run the long sim_server and emu_server example suites
 ```
 Short versions of the tests, a summary at the end (PASS/FAIL/SKIP per tool and test), exit code 1
 if a test fails. Tools that are not installed are skipped. Logs and the summary (`summary.txt`) are
 in `output_regression/`.
-* `sw` (g++ only, about 1 min): [unit](./example/sw_server/sw_client/unit/) regression tests of the client/server
-  library (`example/sw_server/sw_client/unit/run_all.sh` runs them alone), and the sw_server example
+* `sw` (g++ only, about 1 min):
+  [example/sw_server/sw_client/run_all.sh](./example/sw_server/sw_client/run_all.sh), the read_write
+  example and the [unit](./example/sw_server/sw_client/unit/) regression tests of the library
 * `verilator`: sim_server examples, 2 CPUs for the multi ones
 * `vcs`: sim_server/sw_client/read_write and sim_server/sim_client/axi_4state/multi (2 CPUs)
 * `zebu`: emu_server/sw_client/read_write, reusing its database when it is newer than the sources,
