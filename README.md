@@ -56,8 +56,12 @@ in `output_regression/`.
   example and the [unit](./example/sw_server/sw_client/unit/) regression tests of the library
 * `verilator`: sim_server examples, 2 CPUs for the multi ones
 * `vcs`: sim_server/sw_client/read_write and sim_server/sim_client/axi_4state/multi (2 CPUs)
-* `zebu`: emu_server/sw_client/read_write, reusing its database when it is newer than the sources,
-  skipped otherwise (`-z` builds it)
+* `zebu`: emu_server/sw_client/read_write, reusing its database unless the SV sources changed
+  (then skipped, `-z` builds it); the host code is rebuilt alone when the C sources changed
+
+[example/sw_server/sw_client/bench/run](./example/sw_server/sw_client/bench/run) measures the
+client/server library (SW, about 15 s): latency of a round trip, throughput of a stream, cost of a
+pull with no data.
 
 ## available modules
 * core library (ready/valid protocol)
@@ -93,6 +97,11 @@ Look at those files to have more info about those platforms:
 * each **simulation** can use multiple channels
 * `multisim` modules need a unique `server_name` to link a client/server channel together
 * client modules need to set `server_runtime_directory` to know the port/ip address of each channel
+* a client on the host of the server connects through a Unix socket (in `.multisim/`), a client on
+  another host through TCP
+* the pull modules call their DPI at every cycle while no data comes: their
+  `DPI_DELAY_CYCLES_INACTIVE`/`DPI_DELAY_CYCLES_ACTIVE` parameters space the calls (faster idle
+  simulation, more latency), e.g. 1000 cycles cuts the idle cost of a VCS client by 75%
 
 ## ZeBu
 ```bash
